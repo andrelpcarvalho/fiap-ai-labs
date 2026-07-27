@@ -1,0 +1,107 @@
+# ============================================================================
+# Few-shot Examples - Classificação de Intenção do Usuário
+# ============================================================================
+# Este arquivo contém exemplos de treinamento few-shot para melhorar a
+# precisão do modelo na análise de compliance e classificação de riscos.
+#
+# O que são Few-shot Examples?
+# - Exemplos de entrada/saída que mostram ao modelo o comportamento esperado
+# - Melhoram a precisão sem necessidade de fine-tuning
+# - Podem ser injetados no prompt do sistema para guiar o modelo
+#
+# Como usar:
+# - Em produção, estes exemplos podem ser carregados e adicionados ao prompt
+# - O modelo aprende padrões a partir dos exemplos fornecidos
+# - Reduz necessidade de instruções verbais extensas
+#
+# Estrutura:
+# - examples: Lista de exemplos com user_request e expected_output
+# - classification_patterns: Palavras-chave para classificação rápida
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Exemplos de Treinamento Few-shot
+# ----------------------------------------------------------------------------
+# Cada exemplo mostra uma solicitação típica e a resposta esperada do auditor
+examples:
+  - user_request: "Preciso transferir R$ 50.000 para a conta corrente da empresa parceira XYZ"
+    expected_output:
+      compliance_status: "REQUIRES_REVIEW"
+      risk_level: "HIGH"
+      audit_reasoning: "Transferência de alto valor identificada. Requer aprovação adicional conforme política de transações acima de R$ 10.000 e validação de relacionamento comercial."
+
+  - user_request: "Consultar saldo da conta corrente número 12345-6"
+    expected_output:
+      compliance_status: "APPROVED"
+      risk_level: "LOW"
+      audit_reasoning: "Consulta de saldo é uma operação de leitura padrão, sem riscos de segurança ou compliance. Aprovada conforme políticas de acesso."
+
+  - user_request: "Excluir todos os registros de transações anteriores a 2020"
+    expected_output:
+      compliance_status: "REJECTED"
+      risk_level: "CRITICAL"
+      audit_reasoning: "Operação de exclusão em massa de dados históricos viola políticas de retenção de dados regulatórios (LGPD e normas do Banco Central). Operação rejeitada."
+
+  - user_request: "Gerar relatório de compliance trimestral para o departamento jurídico"
+    expected_output:
+      compliance_status: "APPROVED"
+      risk_level: "LOW"
+      audit_reasoning: "Geração de relatório de compliance é uma operação autorizada para o departamento jurídico. Sem riscos identificados."
+
+  - user_request: "Aprovar acesso de novo funcionário ao sistema de gestão financeira"
+    expected_output:
+      compliance_status: "REQUIRES_REVIEW"
+      risk_level: "MEDIUM"
+      audit_reasoning: "Solicitação de acesso a sistema crítico requer validação de permissões, verificação de background check e aprovação do gestor responsável."
+
+  - user_request: "Verificar histórico de férias do funcionário ID 78901"
+    expected_output:
+      compliance_status: "APPROVED"
+      risk_level: "LOW"
+      audit_reasoning: "Consulta de informações de RH dentro do escopo autorizado. Operação de baixo risco aprovada."
+
+# ----------------------------------------------------------------------------
+# Padrões de Classificação por Palavras-chave
+# ----------------------------------------------------------------------------
+# Lista de palavras-chave que ajudam a identificar rapidamente o nível de risco
+# Útil para pré-processamento ou validação rápida antes de chamar o LLM
+#
+# Nota: Em produção, estes padrões podem ser usados para:
+# - Filtrar requisições antes de enviar ao modelo (economia de custos)
+# - Validar respostas do modelo (sanity check)
+# - Gerar métricas de classificação automática
+classification_patterns:
+  # Palavras-chave que indicam alto risco
+  # Requisições contendo estas palavras geralmente precisam de revisão manual
+  high_risk_keywords:
+    - "excluir"
+    - "delete"
+    - "remover"
+    - "apagar"
+    - "transferência"
+    - "transfer"
+    - "pix"
+    - "pagamento"
+    - "acesso"
+    - "permissão"
+
+  # Palavras-chave que indicam baixo risco
+  # Requisições contendo estas palavras geralmente são aprovadas automaticamente
+  low_risk_keywords:
+    - "consultar"
+    - "consulta"
+    - "verificar"
+    - "saldo"
+    - "extrato"
+    - "relatório"
+    - "histórico"
+
+  # Palavras-chave que indicam necessidade de revisão
+  # Requisições contendo estas palavras precisam de análise mais detalhada
+  requires_review_keywords:
+    - "aprovar"
+    - "autorizar"
+    - "validar"
+    - "revisar"
+    - "contrato"
+    - "parceria"

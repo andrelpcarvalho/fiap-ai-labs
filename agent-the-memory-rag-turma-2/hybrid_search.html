@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Masterclass: Arquitetura Hybrid Search | Auditor de Contratos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      /* Scrollbar customizada para um visual limpo */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+        height: 300px;
+        margin: 0 auto;
+      }
+
+      @media (min-width: 768px) {
+        .chart-container {
+          height: 400px;
+        }
+      }
+
+      .slide-in {
+        animation: slideIn 0.3s ease-out forwards;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body
+    class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-900"
+  >
+    <!-- Chosen Palette: Slate (Fundo Neutro) + Indigo (Primário/Semântico) + Emerald (Secundário/Keyword) -->
+    <!-- Application Structure Plan: 
+         1. Header: Contexto (Auditor de Contratos).
+         2. Navegação: Abas para os 4 passos lógicos (Problema -> BM25 -> RRF -> Simulador).
+         3. Área de Conteúdo Dinâmico.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <div id="app-root" class="min-h-screen flex flex-col">
+      <!-- Header -->
+      <header
+        class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm"
+      >
+        <div
+          class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"
+        >
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl"
+            >
+              H
+            </div>
+            <div>
+              <h1 class="text-xl font-bold text-slate-900">
+                Hybrid Search
+                <span class="text-slate-400 font-normal">| Masterclass</span>
+              </h1>
+              <p class="text-xs text-slate-500">
+                Auditor de Contratos - Bootcamp Itaú FIAP 2026
+              </p>
+            </div>
+          </div>
+          <div class="hidden md:block text-sm text-slate-500">
+            Guia Interativo de Implementação
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Navigation -->
+      <nav class="bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex space-x-8 overflow-x-auto" aria-label="Tabs">
+            <button
+              onclick="app.navigate('problem')"
+              id="nav-problem"
+              class="nav-tab border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
+            >
+              1. O Problema
+            </button>
+            <button
+              onclick="app.navigate('bm25')"
+              id="nav-bm25"
+              class="nav-tab border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
+            >
+              2. Deep Dive BM25
+            </button>
+            <button
+              onclick="app.navigate('rrf')"
+              id="nav-rrf"
+              class="nav-tab border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
+            >
+              3. Lógica RRF
+            </button>
+            <button
+              onclick="app.navigate('simulator')"
+              id="nav-simulator"
+              class="nav-tab border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
+            >
+              4. Simulador & Alpha
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main Content Area -->
+      <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <!-- SECTION 1: THE PROBLEM -->
+        <section id="view-problem" class="slide-in block">
+          <div class="max-w-3xl mx-auto text-center mb-10">
+            <h2 class="text-3xl font-bold text-slate-900 mb-4">
+              A Miopia da Busca Semântica
+            </h2>
+            <p class="text-lg text-slate-600 leading-relaxed">
+              Sistemas RAG puramente vetoriais são excelentes para conceitos,
+              mas falham em <strong>termos exatos</strong>. No contexto de
+              auditoria, confundir números de contrato é inaceitável.
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-8 mb-12">
+            <!-- Scenario A: Vector Only -->
+            <div
+              class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden group hover:shadow-md transition-shadow"
+            >
+              <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+              <div class="flex justify-between items-start mb-4">
+                <h3 class="text-lg font-semibold text-slate-900">
+                  Busca Vetorial (Semântica)
+                </h3>
+                <span
+                  class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2.5 py-0.5 rounded"
+                  >Dense Retrieval</span
+                >
+              </div>
+              <div
+                class="bg-slate-100 p-3 rounded mb-4 font-mono text-sm text-slate-600"
+              >
+                Query: "Contrato matrícula <strong>12345</strong>"
+              </div>
+              <div class="space-y-3">
+                <div
+                  class="p-3 bg-red-50 border border-red-100 rounded text-sm text-red-700 flex items-start gap-2"
+                >
+                  <span class="text-lg">❌</span>
+                  <div>
+                    <strong>Retorno:</strong> "Contrato matrícula 54321"<br />
+                    <span class="text-xs opacity-75"
+                      >Motivo: Semanticamente idêntico (ambos são contratos),
+                      mas número errado.</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Scenario B: Hybrid -->
+            <div
+              class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden group hover:shadow-md transition-shadow"
+            >
+              <div
+                class="absolute top-0 left-0 w-1 h-full bg-emerald-500"
+              ></div>
+              <div class="flex justify-between items-start mb-4">
+                <h3 class="text-lg font-semibold text-slate-900">
+                  Solução Híbrida
+                </h3>
+                <span
+                  class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded"
+                  >Dense + Sparse</span
+                >
+              </div>
+              <div
+                class="bg-slate-100 p-3 rounded mb-4 font-mono text-sm text-slate-600"
+              >
+                Query: "Contrato matrícula <strong>12345</strong>"
+              </div>
+              <div class="space-y-3">
+                <div
+                  class="p-3 bg-green-50 border border-green-100 rounded text-sm text-green-700 flex items-start gap-2"
+                >
+                  <span class="text-lg">✅</span>
+                  <div>
+                    <strong>Retorno:</strong> "Contrato matrícula 12345"<br />
+                    <span class="text-xs opacity-75"
+                      >Motivo: BM25 captura o token exato "12345", corrigindo a
+                      alucinação semântica.</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="bg-slate-900 text-slate-300 rounded-lg p-6 font-mono text-sm overflow-x-auto shadow-inner"
+          >
+            <p class="mb-2 text-slate-400"># Por que precisamos do BM25?</p>
+            <p class="mb-1">
+              <span class="text-purple-400">class</span>
+              <span class="text-yellow-300">HybridSearchAdapter</span>:
+            </p>
+            <p class="pl-4 text-emerald-400">"""</p>
+            <p class="pl-4 text-emerald-400">
+              Embeddings capturam significado.
+            </p>
+            <p class="pl-4 text-emerald-400">
+              BM25 captura tokens exatos (IDs, Datas, CPFs).
+            </p>
+            <p class="pl-4 text-emerald-400">
+              Juntos, eles cobrem as falhas um do outro.
+            </p>
+            <p class="pl-4 text-emerald-400">"""</p>
+          </div>
+        </section>
+
+        <!-- SECTION 2: BM25 LAB -->
+        <section id="view-bm25" class="hidden slide-in">
+          <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Left: Explanation -->
+            <div class="lg:col-span-1 space-y-6">
+              <div>
+                <h2 class="text-2xl font-bold text-slate-900">
+                  Anatomia do BM25
+                </h2>
+                <p class="text-slate-600 mt-2 text-sm">
+                  O BM25 não é uma contagem linear. Ele usa uma curva de
+                  <strong>saturação</strong>. Se uma palavra aparece 100 vezes,
+                  ela não é 100x mais importante.
+                </p>
+              </div>
+
+              <div
+                class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm"
+              >
+                <h3 class="font-semibold text-slate-800 mb-3">
+                  Parâmetros de Ajuste
+                </h3>
+
+                <div class="mb-6">
+                  <div class="flex justify-between mb-1">
+                    <label class="text-sm font-medium text-slate-700"
+                      >k1 (Saturação)</label
+                    >
+                    <span
+                      id="val-k1"
+                      class="text-sm font-mono text-indigo-600 bg-indigo-50 px-2 rounded"
+                      >1.5</span
+                    >
+                  </div>
+                  <input
+                    type="range"
+                    id="input-k1"
+                    min="0.1"
+                    max="3.0"
+                    step="0.1"
+                    value="1.5"
+                    class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  />
+                  <p class="text-xs text-slate-500 mt-1">
+                    Controla quão rápido o score satura. Padrão: 1.2 - 2.0
+                  </p>
+                </div>
+
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <label class="text-sm font-medium text-slate-700"
+                      >b (Normalização)</label
+                    >
+                    <span
+                      id="val-b"
+                      class="text-sm font-mono text-emerald-600 bg-emerald-50 px-2 rounded"
+                      >0.75</span
+                    >
+                  </div>
+                  <input
+                    type="range"
+                    id="input-b"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value="0.75"
+                    class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                  />
+                  <p class="text-xs text-slate-500 mt-1">
+                    Penaliza documentos longos. 1.0 = penalização total.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                class="bg-slate-100 p-4 rounded text-xs text-slate-600 font-mono"
+              >
+                <p>
+                  Score = IDF * (TF * (k1 + 1)) / (TF + k1 * (1 - b + b *
+                  L/avgL))
+                </p>
+              </div>
+            </div>
+
+            <!-- Right: Visualization -->
+            <div
+              class="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm"
+            >
+              <h3 class="text-lg font-bold text-slate-900 mb-4">
+                Curva de Impacto da Frequência (TF)
+              </h3>
+              <div class="chart-container">
+                <canvas id="bm25Chart"></canvas>
+              </div>
+              <p class="text-center text-xs text-slate-400 mt-2">
+                Eixo X: Frequência do termo no doc | Eixo Y: Score BM25
+                Resultante
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 3: RRF LOGIC -->
+        <section id="view-rrf" class="hidden slide-in">
+          <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-10">
+              <h2 class="text-2xl font-bold text-slate-900">
+                Reciprocal Rank Fusion (RRF)
+              </h2>
+              <p class="text-slate-600 mt-2">
+                Como somar maçãs (distância vetorial) com laranjas (score
+                BM25)?<br />
+                A resposta: ignoramos os valores e usamos apenas o
+                <strong>Ranking</strong>.
+              </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+              <div class="space-y-6">
+                <div
+                  class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"
+                >
+                  <h3 class="font-semibold text-slate-800 mb-4 border-b pb-2">
+                    Calculadora RRF
+                  </h3>
+                  <div class="space-y-4">
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-slate-700 mb-1"
+                        >Rank Semântico</label
+                      >
+                      <input
+                        type="number"
+                        id="rank-sem"
+                        value="1"
+                        min="1"
+                        max="100"
+                        class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-slate-700 mb-1"
+                        >Rank Keyword (BM25)</label
+                      >
+                      <input
+                        type="number"
+                        id="rank-key"
+                        value="5"
+                        min="1"
+                        max="100"
+                        class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      />
+                    </div>
+                    <div class="pt-2">
+                      <div
+                        class="flex justify-between items-center bg-slate-50 p-3 rounded border border-slate-200"
+                      >
+                        <span class="text-sm font-bold text-slate-600"
+                          >RRF Score:</span
+                        >
+                        <span
+                          id="rrf-result"
+                          class="text-xl font-bold text-indigo-600"
+                          >0.0317</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 text-sm text-indigo-800"
+                >
+                  <p class="font-bold mb-1">Fórmula:</p>
+                  <p class="font-mono">
+                    Score = (1 / (60 + rank_sem)) + (1 / (60 + rank_key))
+                  </p>
+                  <p class="mt-2 text-xs">
+                    A constante <strong>k=60</strong> suaviza a curva,
+                    garantindo que o top 1 seja muito mais valioso que o top 10.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm h-full"
+              >
+                <h3 class="font-semibold text-slate-800 mb-4 text-center">
+                  Impacto da Posição no Score
+                </h3>
+                <div class="chart-container" style="height: 300px">
+                  <canvas id="rrfChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 4: SIMULATOR -->
+        <section id="view-simulator" class="hidden slide-in">
+          <div class="flex flex-col lg:flex-row gap-8 h-full">
+            <!-- Controls -->
+            <div class="lg:w-1/3 space-y-6">
+              <div
+                class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm sticky top-24"
+              >
+                <h2 class="text-xl font-bold text-slate-900 mb-2">
+                  Simulador Hybrid
+                </h2>
+                <p class="text-sm text-slate-500 mb-6">
+                  Ajuste o <strong>Alpha ($\alpha$)</strong> para balancear
+                  entre contexto e precisão exata.
+                </p>
+
+                <div class="mb-8">
+                  <div class="flex justify-between items-end mb-2">
+                    <label class="font-bold text-slate-700"
+                      >Parâmetro Alpha</label
+                    >
+                    <span
+                      id="alpha-val"
+                      class="text-2xl font-bold text-indigo-600"
+                      >0.5</span
+                    >
+                  </div>
+                  <input
+                    type="range"
+                    id="alpha-slider"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value="0.5"
+                    class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div
+                    class="flex justify-between text-xs font-bold text-slate-400 mt-2 uppercase tracking-wider"
+                  >
+                    <span>Keyword (BM25)</span>
+                    <span>Semântico (Vector)</span>
+                  </div>
+                </div>
+
+                <div class="space-y-3 text-sm">
+                  <div
+                    id="mode-desc-keyword"
+                    class="mode-desc hidden bg-emerald-50 text-emerald-800 p-3 rounded border border-emerald-100"
+                  >
+                    <strong>Modo Keyword Puro ($\alpha < 0.3$):</strong>
+                    Prioriza tokens exatos. Ideal para IDs, CPFs e Códigos.
+                  </div>
+                  <div
+                    id="mode-desc-hybrid"
+                    class="mode-desc bg-slate-100 text-slate-700 p-3 rounded border border-slate-200"
+                  >
+                    <strong>Modo Híbrido ($\alpha \approx 0.5$):</strong>
+                    Equilíbrio perfeito. Usa contexto mas respeita termos
+                    técnicos.
+                  </div>
+                  <div
+                    id="mode-desc-semantic"
+                    class="mode-desc hidden bg-indigo-50 text-indigo-800 p-3 rounded border border-indigo-100"
+                  >
+                    <strong>Modo Semântico ($\alpha > 0.7$):</strong> Foca em
+                    intenção e sinônimos. Ignora erros de digitação.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Results List -->
+            <div class="lg:w-2/3">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-slate-700">
+                  Resultados Re-rankeados
+                </h3>
+                <div
+                  class="text-xs text-slate-400 bg-white px-2 py-1 rounded border"
+                >
+                  Query: "Contrato 12345 de Serviços TI"
+                </div>
+              </div>
+
+              <div id="results-container" class="space-y-3">
+                <!-- Results injetados pelo JS -->
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="bg-slate-50 border-t border-slate-200 py-8 mt-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
+          <p>
+            &copy; 2026 Auditor de Contratos. Baseado na arquitetura RAG
+            Avançada.
+          </p>
+          <p class="mt-2 text-xs">
+            Implementação didática de <code>hybrid_search.py</code> e
+            <code>HybridSearchAdapter</code>.
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      // --- DATA & LOGIC ---
+
+      const appState = {
+        currentView: "problem",
+        bm25: { k1: 1.5, b: 0.75 },
+        rrf: { k: 60, sem: 1, key: 5 },
+        alpha: 0.5,
+        documents: [
+          {
+            id: "A",
+            title: "Contrato 12345 - Prestação de Serviços",
+            snippet: "...cláusula de TI referente ao contrato 12345...",
+            ranks: { semantic: 3, keyword: 1 },
+          },
+          {
+            id: "C",
+            title: "Contrato 54321 - Serviços de TI",
+            snippet: "...objeto: serviços de tecnologia da informação...",
+            ranks: { semantic: 1, keyword: 50 },
+          },
+          {
+            id: "D",
+            title: "Aditivo Contratual 12345",
+            snippet: "...aditivo ao instrumento 12345 assinado em...",
+            ranks: { semantic: 20, keyword: 2 },
+          },
+          {
+            id: "B",
+            title: "Manual de Serviços Gerais",
+            snippet: "...procedimentos para TI e manutenção...",
+            ranks: { semantic: 5, keyword: 80 },
+          },
+          {
+            id: "F",
+            title: "Recibo de Pagamento 999",
+            snippet: "...valor referente a serviços...",
+            ranks: { semantic: 40, keyword: 90 },
+          },
+        ],
+      };
+
+      const app = {
+        init() {
+          this.setupBM25Chart();
+          this.setupRRFChart();
+          this.setupRRFCalculator();
+          this.setupSimulator();
+          this.updateBM25Viz();
+          this.updateSimulator();
+        },
+
+        // Função de navegação agora é um método de 'app' e acessível via global
+        navigate(viewId) {
+          appState.currentView = viewId;
+
+          // Atualiza abas da UI
+          document.querySelectorAll(".nav-tab").forEach((el) => {
+            if (el.id === `nav-${viewId}`) {
+              el.classList.remove("border-transparent", "text-slate-500");
+              el.classList.add("border-indigo-500", "text-indigo-600");
+            } else {
+              el.classList.add("border-transparent", "text-slate-500");
+              el.classList.remove("border-indigo-500", "text-indigo-600");
+            }
+          });
+
+          // Atualiza Seções
+          document.querySelectorAll("section").forEach((el) => {
+            el.classList.add("hidden");
+          });
+          document.getElementById(`view-${viewId}`).classList.remove("hidden");
+
+          // Ajusta redimensionamento de gráficos
+          if (viewId === "bm25" && this.bm25Chart) this.bm25Chart.resize();
+          if (viewId === "rrf" && this.rrfChart) this.rrfChart.resize();
+        },
+
+        setupBM25Chart() {
+          const canvas = document.getElementById("bm25Chart");
+          if (!canvas) return;
+          const ctx = canvas.getContext("2d");
+          this.bm25Chart = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: Array.from({ length: 20 }, (_, i) => i + 1),
+              datasets: [
+                {
+                  label: "Impacto no Score",
+                  data: [],
+                  borderColor: "#4f46e5",
+                  backgroundColor: "rgba(79, 70, 229, 0.1)",
+                  borderWidth: 3,
+                  fill: true,
+                  tension: 0.4,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: { display: true, text: "Score" },
+                },
+                x: {
+                  title: { display: true, text: "Frequência do Termo (TF)" },
+                },
+              },
+            },
+          });
+
+          document.getElementById("input-k1").addEventListener("input", (e) => {
+            appState.bm25.k1 = parseFloat(e.target.value);
+            document.getElementById("val-k1").innerText = appState.bm25.k1;
+            this.updateBM25Viz();
+          });
+          document.getElementById("input-b").addEventListener("input", (e) => {
+            appState.bm25.b = parseFloat(e.target.value);
+            document.getElementById("val-b").innerText = appState.bm25.b;
+            this.updateBM25Viz();
+          });
+        },
+
+        updateBM25Viz() {
+          const k1 = appState.bm25.k1;
+          const b = appState.bm25.b;
+          const dataPoints = [];
+          for (let tf = 1; tf <= 20; tf++) {
+            const numerator = tf * (k1 + 1);
+            const denominator = tf + k1 * (1 - b + b * 1);
+            dataPoints.push(numerator / denominator);
+          }
+          if (this.bm25Chart) {
+            this.bm25Chart.data.datasets[0].data = dataPoints;
+            this.bm25Chart.update();
+          }
+        },
+
+        setupRRFChart() {
+          const canvas = document.getElementById("rrfChart");
+          if (!canvas) return;
+          const ctx = canvas.getContext("2d");
+          this.rrfChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: ["Top 1", "Top 5", "Top 10", "Top 50", "Top 100"],
+              datasets: [
+                {
+                  label: "Contribuição RRF",
+                  data: [1 / 61, 1 / 65, 1 / 70, 1 / 110, 1 / 160],
+                  backgroundColor: "#10b981",
+                  borderRadius: 6,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+            },
+          });
+        },
+
+        setupRRFCalculator() {
+          const updateCalc = () => {
+            const sem =
+              parseInt(document.getElementById("rank-sem").value) || 100;
+            const key =
+              parseInt(document.getElementById("rank-key").value) || 100;
+            const total = 1.0 / (60 + sem) + 1.0 / (60 + key);
+            document.getElementById("rrf-result").innerText = total.toFixed(4);
+          };
+          document
+            .getElementById("rank-sem")
+            .addEventListener("input", updateCalc);
+          document
+            .getElementById("rank-key")
+            .addEventListener("input", updateCalc);
+        },
+
+        setupSimulator() {
+          const slider = document.getElementById("alpha-slider");
+          slider.addEventListener("input", (e) => {
+            appState.alpha = parseFloat(e.target.value);
+            document.getElementById("alpha-val").innerText = appState.alpha;
+
+            document
+              .querySelectorAll(".mode-desc")
+              .forEach((el) => el.classList.add("hidden"));
+            if (appState.alpha < 0.3)
+              document
+                .getElementById("mode-desc-keyword")
+                .classList.remove("hidden");
+            else if (appState.alpha > 0.7)
+              document
+                .getElementById("mode-desc-semantic")
+                .classList.remove("hidden");
+            else
+              document
+                .getElementById("mode-desc-hybrid")
+                .classList.remove("hidden");
+
+            this.updateSimulator();
+          });
+        },
+
+        updateSimulator() {
+          const alpha = appState.alpha;
+          const k = 60;
+
+          const scoredDocs = appState.documents.map((doc) => {
+            const rrfSem = 1.0 / (k + doc.ranks.semantic);
+            const rrfKey = 1.0 / (k + doc.ranks.keyword);
+            const finalScore = alpha * rrfSem + (1 - alpha) * rrfKey;
+            return { ...doc, finalScore, rrfSem, rrfKey };
+          });
+
+          scoredDocs.sort((a, b) => b.finalScore - a.finalScore);
+
+          const container = document.getElementById("results-container");
+          if (!container) return;
+          container.innerHTML = "";
+
+          scoredDocs.forEach((doc, index) => {
+            const isWinner = index === 0;
+            const highlightClass = isWinner
+              ? "ring-2 ring-indigo-500 bg-indigo-50/50"
+              : "bg-white hover:bg-slate-50";
+
+            let badge = "";
+            if (doc.id === "A")
+              badge = `<span class="ml-2 text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded border border-green-200">Alvo Exato</span>`;
+            if (doc.id === "C")
+              badge = `<span class="ml-2 text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded border border-red-200">Alucinação Semântica</span>`;
+
+            const html = `
+                        <div class="p-4 rounded-lg border border-slate-200 transition-all ${highlightClass}">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="flex items-center">
+                                        <span class="text-xs font-mono font-bold text-slate-400 mr-2">#${index + 1}</span>
+                                        <h4 class="font-bold text-slate-800 text-sm">${doc.title}</h4>
+                                        ${badge}
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-1 font-mono">"${doc.snippet}"</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-slate-900">${doc.finalScore.toFixed(4)}</div>
+                                    <div class="text-[10px] text-slate-400 uppercase tracking-wider">Score Final</div>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex items-center gap-2 text-[10px]">
+                                <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden flex">
+                                    <div style="width: ${(doc.rrfKey / (doc.rrfKey + doc.rrfSem)) * 100}%" class="bg-emerald-400"></div>
+                                    <div style="width: ${(doc.rrfSem / (doc.rrfKey + doc.rrfSem)) * 100}%" class="bg-indigo-400"></div>
+                                </div>
+                                <div class="flex gap-2 min-w-[120px] justify-end">
+                                    <span class="text-emerald-600 font-bold">Key: #${doc.ranks.keyword}</span>
+                                    <span class="text-slate-300">|</span>
+                                    <span class="text-indigo-600 font-bold">Sem: #${doc.ranks.semantic}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+            container.insertAdjacentHTML("beforeend", html);
+          });
+        },
+      };
+
+      // Torna o objeto app global ANTES do DOMContentLoaded para que os 'onclick' funcionem
+      window.app = app;
+
+      // Inicializa o app quando o DOM estiver pronto
+      window.addEventListener("DOMContentLoaded", () => {
+        app.init();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,66 @@
+# ============================================================================
+# Política de Roteamento de Modelos - Governance Gateway
+# ============================================================================
+# Este arquivo define as regras de negócio para escolha do modelo LLM baseado
+# no departamento solicitante e na complexidade da requisição.
+#
+# Arquitetura: Padrão Router-Gateway
+# - A lógica de decisão está desacoplada do código Python
+# - Mudanças na política não requerem alteração no código
+# - Facilita otimização de custos (FinOps) via configuração
+#
+# Tiers Disponíveis:
+# - platinum: Sempre usa Gemini Pro (máxima qualidade, maior custo)
+# - standard: Decisão dinâmica baseada em complexity_score
+# - budget: Sempre usa Gemini Flash (menor custo, boa qualidade)
+
+# ----------------------------------------------------------------------------
+# Configuração de Departamentos
+# ----------------------------------------------------------------------------
+# Define qual modelo cada departamento deve usar baseado em seu tier
+departments:
+  # Departamento Jurídico - Tier Platinum
+  # Motivo: Requisitos legais exigem máxima precisão e análise detalhada
+  # Sempre usa o modelo mais avançado, independente da complexidade
+  legal_dept:
+    tier: platinum
+    model: gemini-2.5-pro
+    complexity_threshold: null  # Sempre usa Pro (ignora complexidade)
+  
+  # Recursos Humanos - Tier Standard
+  # Motivo: Balanceamento entre custo e qualidade
+  # Usa Flash para tarefas simples, Pro para análises complexas
+  hr_dept:
+    tier: standard
+    model: null  # Decisão baseada em complexidade (não fixo)
+    complexity_threshold: 0.5  # Se complexity < 0.5 usa Flash, senão Pro
+  
+  # Operações de TI - Tier Budget
+  # Motivo: Operações rotineiras não requerem modelo premium
+  # Sempre usa o modelo mais econômico
+  it_ops:
+    tier: budget
+    model: gemini-2.5-flash
+    complexity_threshold: null  # Sempre usa Flash (ignora complexidade)
+
+# ----------------------------------------------------------------------------
+# Tabela de Preços (FinOps)
+# ----------------------------------------------------------------------------
+# Define os custos por modelo para cálculo de telemetria
+# Valores em USD por 1.000 tokens (input/output separados)
+# 
+# Nota: Estes são valores fictícios para demonstração.
+# Em produção, atualize com os preços reais do Google Cloud Vertex AI
+pricing:
+  # Gemini 2.5 Pro - Modelo Premium
+  # Características: Maior capacidade de raciocínio, melhor para tarefas complexas
+  gemini-2.5-pro:
+    input_per_1k_tokens:  0.00125 # USD por 1k tokens de input
+    output_per_1k_tokens: 0.01000 # USD por 1k tokens de output
+  
+  # Gemini 2.5 Flash - Modelo Otimizado
+  # Características: Mais rápido e econômico, ideal para tarefas simples
+  gemini-2.5-flash:
+    input_per_1k_tokens:  0.00030  # USD por 1k tokens de input
+    output_per_1k_tokens: 0.00250   # USD por 1k tokens de output
+

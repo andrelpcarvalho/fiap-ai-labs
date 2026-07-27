@@ -1,0 +1,18 @@
+Políticas de Empréstimo Pessoal – Banco (Lab RAG)
+
+1. Perfis e taxas
+- Cliente premium: taxa a partir de 0,85% a.m., prazo de até 60 meses, limite conforme análise.
+- Cliente standard: taxa a partir de 1,20% a.m., prazo de até 48 meses.
+- Margem máxima de desconto na taxa para premium: 0,3 ponto percentual. Acima disso, encaminhar para gerente.
+
+2. Documentação
+- RG e CPF; comprovante de residência; comprovante de renda (últimos 3 meses).
+- Para valores acima de R$ 30.000: declaração de IR ou certidão simplificada.
+
+3. Handoff e recusas
+- Handoff obrigatório após 3 recusas de taxa na mesma sessão.
+- Registrar motivo da recusa no CRM antes do handoff.
+- Oferta de taxa deve ser documentada (valor, prazo, parcela) para auditoria.
+
+4. Canais
+- Proposta pode ser feita pelo agente virtual; aceite e liberação seguem fluxo aprovado pelo gerente quando aplicável.

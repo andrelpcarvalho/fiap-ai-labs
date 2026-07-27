@@ -1,0 +1,64 @@
+[
+  {
+    "id": "q01",
+    "question": "Qual a taxa de empréstimo pessoal para cliente premium?",
+    "must_contain": ["0,85%"],
+    "source_hint": "lab_emprestimo.txt"
+  },
+  {
+    "id": "q02",
+    "question": "Qual a taxa de empréstimo para cliente standard?",
+    "must_contain": ["1,20%"],
+    "source_hint": "lab_emprestimo.txt"
+  },
+  {
+    "id": "q03",
+    "question": "Após quantas recusas de taxa o handoff é obrigatório?",
+    "must_contain": ["3"],
+    "source_hint": "lab_emprestimo.txt"
+  },
+  {
+    "id": "q04",
+    "question": "Qual o valor da segunda via do cartão?",
+    "must_contain": ["35"],
+    "source_hint": "lab_tarifas.csv"
+  },
+  {
+    "id": "q05",
+    "question": "Quantos TEDs gratuitos a conta premium tem por mês?",
+    "must_contain": ["5"],
+    "source_hint": "lab_tarifas.csv"
+  },
+  {
+    "id": "q06",
+    "question": "Quanto custa um TED após o limite gratuito na conta premium?",
+    "must_contain": ["15"],
+    "source_hint": "lab_tarifas.csv"
+  },
+  {
+    "id": "q07",
+    "question": "Qual o valor do saque em rede 24h para conta premium?",
+    "must_contain": ["10"],
+    "source_hint": "lab_tarifas.csv"
+  },
+  {
+    "id": "q08",
+    "question": "Qual a renda mensal mínima para adesão à Conta Premium?",
+    "must_contain": ["5.000", "5000"],
+    "source_hint": "lab_conta_premium.pdf",
+    "must_contain_any": true
+  },
+  {
+    "id": "q09",
+    "question": "Qual o saldo médio exigido no trimestre para Conta Premium?",
+    "must_contain": ["10.000", "10000"],
+    "source_hint": "lab_conta_premium.pdf",
+    "must_contain_any": true
+  },
+  {
+    "id": "q10",
+    "question": "Qual a margem máxima de desconto na taxa para cliente premium?",
+    "must_contain": ["0,3"],
+    "source_hint": "lab_emprestimo.txt"
+  }
+]

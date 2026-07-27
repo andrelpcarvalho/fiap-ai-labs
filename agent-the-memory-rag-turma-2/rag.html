@@ -1,0 +1,1071 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Neural Architect: Masterclass em RAG e Memória</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Configurações de Estilo Personalizado -->
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #0f172a; /* Slate 900 */
+        color: #f8fafc; /* Slate 50 */
+      }
+
+      .font-mono {
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      /* Chart Container Strategy */
+      .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        height: 400px;
+        max-height: 50vh;
+      }
+
+      .plotly-container {
+        width: 100%;
+        height: 500px;
+        min-height: 400px;
+      }
+
+      /* Custom Scrollbar for side navigation */
+      .custom-scroll::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scroll::-webkit-scrollbar-track {
+        background: #0f172a;
+      }
+      .custom-scroll::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 4px;
+      }
+      .custom-scroll::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+      }
+
+      /* Interactive Card Transitions */
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow:
+          0 10px 15px -3px rgba(0, 0, 0, 0.3),
+          0 4px 6px -2px rgba(0, 0, 0, 0.15);
+      }
+
+      /* Chunking Visualization Highlight Classes */
+      .chunk-segment {
+        transition: background-color 0.2s;
+        cursor: pointer;
+        padding: 2px 0;
+        border-radius: 2px;
+      }
+      .chunk-segment:hover {
+        background-color: #1e293b; /* Slate 800 */
+        border-bottom: 2px solid #3b82f6; /* Blue 500 */
+      }
+      .chunk-border-fixed {
+        border-right: 2px dashed #ef4444; /* Red 500 */
+      }
+      .chunk-border-semantic {
+        border-bottom: 2px solid #3b82f6; /* Blue 500 */
+        display: block;
+        margin-bottom: 8px;
+        padding: 8px;
+        background: #1e293b;
+      }
+    </style>
+
+    <!-- Chosen Palette: "Neural Warmth"
+         Background: Cool Gray 100 (#F3F4F6)
+         Surface: White (#FFFFFF)
+         Text: Gray 900 (#111827) & Gray 600 (#4B5563)
+         Primary Accent: Deep Indigo (#4F46E5) - for Logic/Structure
+         Secondary Accent: Emerald (#10B981) - for Success/Retrieval
+         Warning Accent: Amber (#F59E0B) - for Memory/Attention
+    -->
+
+    <!-- Application Structure Plan:
+         Structure: Dashboard Layout with Sidebar Navigation.
+         Rationale: The source material is dense and academic (PhD level). A dashboard approach allows the user to treat the content as a "system to be inspected". 
+         Modules:
+         1. Foundations (Memória & RAG Basics) - Visualization of concepts.
+         2. Data Engineering (Ingestion, Chunking, Embeddings) - Interactive tools to manipulate text and see vectors.
+         3. Vector Architecture (Vector Stores, ScaNN Deep Dive) - Comparison charts.
+         4. Orchestration (Retrieval, Context, Memory Types) - Simulation of the retrieval pipeline.
+         5. Advanced Systems (Evaluation, Agents, GraphRAG) - Conceptual frameworks and metrics.
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. Memory Types: Grid layout comparing Short/Long/Episodic/Semantic.
+         2. RAG Pipeline: Interactive step-by-step horizontal flow (No SVG).
+         3. Embeddings: Plotly 3D Scatter plot simulating semantic space (King-Man+Woman=Queen logic).
+         4. Chunking: Interactive text analysis tool. User selects strategy (Fixed vs Semantic), JS slices text dynamically.
+         5. Vector Stores (ScaNN): Bar chart comparing Latency vs Recall for HNSW vs ScaNN vs Brute Force.
+         6. Retrieval: Simulation of "Hybrid Search" showing results from Keyword vs Vector streams merging via RRF.
+         7. Evaluation: Radar Chart showing RAGAS metrics (Faithfulness, Relevance, etc.).
+         8. Text Content: All text is derived directly from the provided "Roteiro de Aula", maintaining the academic tone.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+  </head>
+  <body class="h-screen flex overflow-hidden">
+    <!-- Sidebar Navigation -->
+    <aside
+      class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col hidden md:flex z-20 shadow-lg"
+    >
+      <div class="p-6 border-b border-slate-800 bg-slate-900/50">
+        <h1 class="text-xl font-bold text-slate-100 tracking-tight">
+          Neural<span class="text-blue-500">Architect</span>
+        </h1>
+        <p
+          class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold"
+        >
+          Masterclass RAG
+        </p>
+      </div>
+
+      <nav class="flex-1 overflow-y-auto custom-scroll py-4">
+        <ul class="space-y-1 px-3" id="nav-list">
+          <!-- Nav items injected by JS -->
+        </ul>
+      </nav>
+
+      <div class="p-4 border-t border-slate-800 bg-slate-900/50">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 rounded-full bg-blue-900/50 flex items-center justify-center text-blue-400 font-bold text-xs"
+          >
+            AI
+          </div>
+          <div>
+            <p class="text-sm font-medium text-slate-300">Modo Especialista</p>
+            <p class="text-xs text-slate-500">Avançado</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Mobile Header -->
+    <div
+      class="md:hidden fixed w-full bg-slate-900 border-b border-slate-800 z-30 flex items-center justify-between p-4 shadow-sm"
+    >
+      <span class="font-bold text-lg text-slate-100"
+        >Neural<span class="text-blue-500">Architect</span></span
+      >
+      <button
+        id="mobile-menu-btn"
+        class="p-2 text-slate-400 hover:bg-slate-800 rounded"
+      >
+        ☰
+      </button>
+    </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div
+      id="mobile-menu"
+      class="fixed inset-0 bg-slate-950 bg-opacity-75 z-40 hidden"
+    >
+      <div class="bg-slate-900 w-64 h-full p-4 overflow-y-auto">
+        <button
+          id="close-menu-btn"
+          class="mb-4 text-right w-full text-slate-400 font-bold"
+        >
+          ✕ Fechar
+        </button>
+        <ul class="space-y-2" id="mobile-nav-list"></ul>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main
+      class="flex-1 overflow-y-auto bg-slate-950 relative w-full pt-16 md:pt-0"
+      id="main-content"
+    >
+      <!-- Content Sections injected by JS -->
+      <div id="content-container" class="max-w-5xl mx-auto p-6 md:p-10 pb-20">
+        <!-- Dynamic Content Here -->
+      </div>
+    </main>
+
+    <!-- JavaScript Logic -->
+    <script>
+      // --- DATA STORE (Source Material) ---
+      const courseData = {
+        modules: [
+          {
+            id: "intro",
+            title: "1. Fundamentos da Memória",
+            icon: "1.",
+            content: {
+              intro:
+                "A memória em agentes de IA transcende a simples retenção de dados. Em arquiteturas avançadas, distinguimos entre o estado paramétrico (pesos da rede) e o estado externalizado (memória episódica e semântica).",
+              details: [
+                {
+                  title: "Conceito Avançado: Memória Paramétrica vs. Externa",
+                  text: "Tradicionalmente, a memória é o estado oculto (h_t) ou os pesos (θ). Em Transformers, a memória de curto prazo é limitada pela janela de contexto (O(N²)). A memória de longo prazo exige arquiteturas neuro-simbólicas.",
+                  highlight:
+                    "Memória Semântica (Fatos Globais) vs. Memória Episódica (Transições de Estado MDP).",
+                },
+                {
+                  title: "Exemplo Prático",
+                  text: "Agente de Suporte Técnico: Curto prazo retém os logs dos últimos 10 min. Longo prazo (episódica) lembra que o cliente teve falha de hardware há 6 meses, alterando a inferência causal.",
+                  source: "Park et al., 2023 (Generative Agents)",
+                },
+              ],
+            },
+          },
+          {
+            id: "rag-pipeline",
+            title: "2. Arquitetura RAG",
+            icon: "2.",
+            content: {
+              intro:
+                "RAG (Retrieval-Augmented Generation) mitiga alucinações condicionando a geração probabilística a documentos recuperados (P(y|x, z)). É a injeção de memória não-paramétrica em tempo de inferência.",
+              pipeline_steps: [
+                {
+                  step: "Ingestão",
+                  desc: "Coleta de dados (Scripts, Data Lakes, Eventos).",
+                },
+                {
+                  step: "Indexação",
+                  desc: "Chunking → Embedding → Vector Store.",
+                },
+                { step: "Retrieval", desc: "Busca Híbrida + Re-ranking." },
+                { step: "Geração", desc: "Contexto montado + Query → LLM." },
+              ],
+              ingestion_strategies: [
+                {
+                  type: "Simples (CLI)",
+                  desc: "Scripts Python para CSV/JSON estáticos. Execução via cron.",
+                },
+                {
+                  type: "Enterprise (Dataflow)",
+                  desc: "Spark/Vertex Pipelines para Data Lakes. Processamento em batch (D+1).",
+                },
+                {
+                  type: "Event-Driven (Real-time)",
+                  desc: "Workers (Celery/Kafka) processam uploads na sessão. Ingestão em segundos.",
+                },
+              ],
+            },
+          },
+          {
+            id: "embeddings",
+            title: "3. Embeddings & Vetores",
+            icon: "3.",
+            content: {
+              intro:
+                "Embeddings são projeções topológicas f: X → R^d transformando tokens discretos em um espaço latente contínuo. A distância geométrica reflete a divergência semântica.",
+              concepts: [
+                {
+                  title: "Arquiteturas Bi-Encoder",
+                  desc: "Redes siamesas (BERT) otimizadas com Contrastive Learning (InfoNCE loss) para aproximar pares positivos na hiperesfera.",
+                },
+                {
+                  title: "MRL (Matryoshka Learning)",
+                  desc: "Concentra entropia nas primeiras dimensões, permitindo truncagem de vetores sem perda massiva de precisão.",
+                },
+                {
+                  title: "Métricas",
+                  desc: "Cosseno vs. Produto Escalar (Dot Product). Se vetores normalizados (L2=1), são matematicamente idênticos.",
+                },
+              ],
+            },
+          },
+          {
+            id: "chunking",
+            title: "4. Engenharia de Chunking",
+            icon: "4.",
+            content: {
+              intro:
+                "A fragmentação é um problema de preservação entrópica. Chunking incorreto destrói correlações de dependência de longo alcance e dilui o sinal semântico no embedding.",
+              strategies: [
+                {
+                  name: "Fixo com Overlap",
+                  desc: "Corte heurístico (ex: 500 tokens). Rápido O(1), mas quebra contexto.",
+                  id: "fixed",
+                },
+                {
+                  name: "Semântico",
+                  desc: "Quebra baseada em distância de cosseno entre sentenças. Mantém coesão tópica.",
+                  id: "semantic",
+                },
+                {
+                  name: "Parent-Child",
+                  desc: "Busca por chunks pequenos (precisão), retorna documento pai (contexto).",
+                  id: "parent",
+                },
+              ],
+            },
+          },
+          {
+            id: "vector-stores",
+            title: "5. Vector Stores & ScaNN",
+            icon: "5.",
+            content: {
+              intro:
+                "Vector Stores resolvem o problema de Nearest Neighbor (ANN) em escala. O padrão HNSW usa grafos de mundo pequeno. O Google Vertex AI usa ScaNN.",
+              scann_deep_dive: {
+                title: "ScaNN vs HNSW",
+                concept: "Quantização Vetorial Anisotrópica",
+                explanation:
+                  "ScaNN penaliza erros de quantização paralelos ao vetor original (que afetam o ranking) e tolera erros ortogonais. Resultado: Compressão massiva e maior QPS.",
+              },
+            },
+          },
+          {
+            id: "retrieval",
+            title: "6. Recuperação Avançada",
+            icon: "6.",
+            content: {
+              intro:
+                "O Retrieval moderno é um pipeline de dois estágios: Busca Híbrida (Vetorial + BM25) seguida de Re-ranking (Cross-Encoders).",
+              concepts: [
+                {
+                  title: "Hybrid Search",
+                  desc: "Fusão de pontuação densa (semântica) e esparsa (palavra-chave exata) via Reciprocal Rank Fusion (RRF).",
+                },
+                {
+                  title: "Re-ranking",
+                  desc: "Cross-Encoders processam Query+Documento juntos (atenção total), refinando drasticamente a precisão do Top-K.",
+                },
+              ],
+            },
+          },
+          {
+            id: "context",
+            title: "7. Montagem de Contexto",
+            icon: "7.",
+            content: {
+              intro:
+                "O fenômeno 'Lost in the Middle' mostra que LLMs ignoram informações no meio do prompt. A montagem de contexto é engenharia de estado.",
+              strategy:
+                "Reordenar chunks para colocar os mais relevantes no início e no fim do prompt, evitando o vale de atenção.",
+            },
+          },
+          {
+            id: "memory-kb",
+            title: "8. Memória vs. Knowledge Base",
+            icon: "8.",
+            content: {
+              intro:
+                "Stateful Memory (Sessão/Usuário) e Knowledge Base (RAG) têm propósitos epistemológicos distintos. Um atualiza o modelo de mundo mutável, o outro fornece fatos imutáveis.",
+              example:
+                "RAG traz calorias da maçã (Fato). Memória traz alergia do usuário (Estado). Agente combina ambos.",
+            },
+          },
+          {
+            id: "evaluation",
+            title: "9. Avaliação (RAGAS)",
+            icon: "9.",
+            content: {
+              intro:
+                "Métricas estáticas (BLEU, ROUGE) falham em RAG: medem overlap lexical, não fidelidade ao contexto nem utilidade da resposta. A avaliação moderna adota LLM-as-a-Judge — um modelo auxiliar pontua entradas/saídas — e o framework RAGAS padroniza esse processo.",
+              what_is_ragas:
+                "RAGAS (Retrieval-Augmented Generation Assessment) é um framework open-source (Explodinggradients) que avalia pipelines RAG sem necessidade de respostas humanas de referência (ground truth). Ele usa o próprio LLM para extrair afirmações da resposta, compará-las ao contexto recuperado e à pergunta, produzindo scores reprodutíveis para Faithfulness, Answer Relevance, Context Precision e Context Recall.",
+              metrics: [
+                {
+                  name: "Faithfulness",
+                  desc: "Mede se a resposta deriva apenas dos chunks recuperados (sem alucinação). O LLM extrai afirmações da resposta e verifica se cada uma é suportada pelo contexto. Score baixo indica que o modelo inventou informações.",
+                },
+                {
+                  name: "Answer Relevance",
+                  desc: "Avalia se a resposta atende diretamente à query do usuário (relevância da resposta). Perguntas geradas a partir da resposta são comparadas à pergunta original; alta similaridade semântica indica boa relevância.",
+                },
+                {
+                  name: "Context Precision",
+                  desc: "Verifica se o retrieval trouxe principalmente chunks úteis ou muito ruído. Chunks que não ajudam a responder penalizam o score; ideal para diagnosticar qualidade do índice e do ranking.",
+                },
+                {
+                  name: "Context Recall",
+                  desc: "Mede se o contexto recuperado contém todos os fatos necessários para responder à pergunta (ground truth ou resposta de referência). Complementar à Precision: recall baixo indica que informações importantes ficaram de fora.",
+                },
+              ],
+            },
+          },
+          {
+            id: "advanced",
+            title: "10. Padrões Avançados",
+            icon: "10.",
+            content: {
+              intro:
+                "Além do RAG linear (uma query → retrieval → um contexto → uma resposta), existem padrões que lidam com síntese em larga escala e com raciocínio que exige múltiplos passos de busca e reflexão.",
+              graph:
+                "GraphRAG (Microsoft) constrói um Knowledge Graph a partir dos documentos (entidades e relações extraídas por LLM) e agrupa nós em comunidades. Em vez de buscar apenas chunks similares à pergunta, o sistema faz sumarização hierárquica por comunidade e combina resumos. Ideal para perguntas de escopo amplo (ex.: 'Qual o tema principal do corpus?', 'Como X se relaciona com Y em todo o material?') que um RAG vetorial puro não responde bem.",
+              agentic:
+                "Agentic RAG coloca um agente (ReAct, Plan-and-Execute, etc.) no centro: ele decide quando consultar a base, formula sub-perguntas, faz múltiplas buscas, reflete sobre os resultados e só então sintetiza a resposta. Essencial para perguntas multi-hop (ex.: 'Qual a política monetária do país do CEO da Apple?') que exigem encadear recuperação → inferência → nova recuperação.",
+            },
+          },
+        ],
+      };
+
+      // --- STATE MANAGEMENT ---
+      let appState = {
+        activeSection: "intro",
+        chunkingMode: "fixed",
+      };
+
+      // --- DOM ELEMENTS ---
+      const navList = document.getElementById("nav-list");
+      const mobileNavList = document.getElementById("mobile-nav-list");
+      const contentContainer = document.getElementById("content-container");
+      const mobileMenu = document.getElementById("mobile-menu");
+
+      // --- INITIALIZATION ---
+      function init() {
+        renderNav();
+        loadSection(appState.activeSection);
+        setupMobileMenu();
+      }
+
+      // --- RENDER FUNCTIONS ---
+      function renderNav() {
+        const createNavItem = (module) => `
+                <li>
+                    <button 
+                        onclick="loadSection('${module.id}')"
+                        class="w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-3
+                        ${
+                          appState.activeSection === module.id
+                            ? "bg-blue-900/30 text-blue-400 border-l-4 border-blue-500"
+                            : "text-slate-400 hover:bg-slate-800 hover:text-slate-200 border-l-4 border-transparent"
+                        }">
+                        <span class="text-xs font-bold opacity-70 w-4">${module.icon}</span>
+                        ${module.title.substring(module.title.indexOf(" ") + 1)}
+                    </button>
+                </li>
+            `;
+
+        navList.innerHTML = courseData.modules.map(createNavItem).join("");
+        mobileNavList.innerHTML = courseData.modules
+          .map(createNavItem)
+          .join("");
+      }
+
+      function setupMobileMenu() {
+        document
+          .getElementById("mobile-menu-btn")
+          .addEventListener("click", () => {
+            mobileMenu.classList.remove("hidden");
+          });
+        document
+          .getElementById("close-menu-btn")
+          .addEventListener("click", () => {
+            mobileMenu.classList.add("hidden");
+          });
+        // Close menu on navigation
+        mobileNavList.addEventListener("click", () => {
+          mobileMenu.classList.add("hidden");
+        });
+      }
+
+      function loadSection(id) {
+        appState.activeSection = id;
+        renderNav(); // Re-render to update active state styles
+
+        const module = courseData.modules.find((m) => m.id === id);
+
+        // Fade out effect could go here, but simple replacement is faster/cleaner
+        contentContainer.innerHTML = buildSectionHTML(module);
+
+        // Post-render script initialization (Charts, Interactions)
+        requestAnimationFrame(() => {
+          initSectionInteractions(id);
+        });
+      }
+
+      function buildSectionHTML(module) {
+        let html = `
+                <div class="mb-8 animate-fade-in">
+                    <div class="flex items-center gap-3 mb-4">
+                        <h2 class="text-3xl font-bold text-slate-100">${module.title}</h2>
+                    </div>
+                    <div class="bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-700 border-l-4 border-l-blue-500">
+                        <p class="text-lg text-slate-300 leading-relaxed">${module.content.intro}</p>
+                    </div>
+                </div>
+            `;
+
+        // Dynamic Content Builder based on Section ID
+        if (module.id === "intro") {
+          html += `
+                    <div class="grid md:grid-cols-2 gap-6">
+                        ${module.content.details
+                          .map(
+                            (d) => `
+                            <div class="bg-slate-800 p-6 rounded-lg shadow-sm border border-slate-700 card-hover">
+                                <h3 class="text-lg font-bold text-blue-400 mb-2">${d.title}</h3>
+                                <p class="text-slate-300 mb-4">${d.text}</p>
+                                ${d.highlight ? `<div class="bg-blue-900/20 p-3 rounded text-sm text-blue-300 border-l-2 border-blue-500 font-medium">${d.highlight}</div>` : ""}
+                                ${d.source ? `<div class="mt-4 text-xs text-slate-500 uppercase font-mono">Fonte: ${d.source}</div>` : ""}
+                            </div>
+                        `,
+                          )
+                          .join("")}
+                    </div>
+                    
+                    <div class="mt-8 bg-slate-900 border border-slate-700 text-slate-100 p-6 rounded-xl">
+                        <h3 class="text-lg font-bold mb-4 text-blue-400">Analogia Cognitiva</h3>
+                        <div class="flex flex-col md:flex-row gap-4 items-center justify-between text-center">
+                            <div class="p-4 bg-slate-800 rounded w-full border border-slate-700">
+                                <div class="font-bold text-slate-200">Memória de Trabalho</div>
+                                <div class="text-xs text-slate-400 mt-1">Context Window (RAM)</div>
+                            </div>
+                            <div class="text-2xl text-slate-600">→</div>
+                            <div class="p-4 bg-slate-800 rounded w-full border border-slate-700">
+                                <div class="font-bold text-slate-200">Memória Semântica</div>
+                                <div class="text-xs text-slate-400 mt-1">Vector Store (Hard Drive)</div>
+                            </div>
+                            <div class="text-2xl text-slate-600">→</div>
+                            <div class="p-4 bg-slate-800 rounded w-full border border-slate-700">
+                                <div class="font-bold text-slate-200">Memória Episódica</div>
+                                <div class="text-xs text-slate-400 mt-1">Logs de Sessão (Diário)</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+        } else if (module.id === "rag-pipeline") {
+          html += `
+                    <div class="space-y-6">
+                        <h3 class="text-xl font-bold text-slate-200">Pipeline de Processamento</h3>
+                        <div class="grid md:grid-cols-4 gap-4">
+                            ${module.content.pipeline_steps
+                              .map(
+                                (step, idx) => `
+                                <div class="bg-slate-800 p-4 rounded-lg border-t-4 border-blue-500 shadow-sm relative">
+                                    <div class="absolute -top-3 -right-3 bg-slate-700 text-blue-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border-2 border-slate-900">${idx + 1}</div>
+                                    <h4 class="font-bold text-slate-200">${step.step}</h4>
+                                    <p class="text-sm text-slate-400 mt-2">${step.desc}</p>
+                                </div>
+                            `,
+                              )
+                              .join("")}
+                        </div>
+
+                        <div class="mt-8">
+                            <h3 class="text-xl font-bold text-slate-200 mb-4">Estratégias de Ingestão</h3>
+                            <div class="bg-slate-800 rounded-xl shadow overflow-hidden border border-slate-700">
+                                <table class="w-full text-left">
+                                    <thead class="bg-slate-900 border-b border-slate-700">
+                                        <tr>
+                                            <th class="p-4 text-xs font-bold text-slate-400 uppercase">Arquitetura</th>
+                                            <th class="p-4 text-xs font-bold text-slate-400 uppercase">Descrição & Aplicação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-700/50">
+                                        ${module.content.ingestion_strategies
+                                          .map(
+                                            (s) => `
+                                            <tr class="hover:bg-slate-700/30">
+                                                <td class="p-4 font-mono text-sm font-bold text-blue-400 whitespace-nowrap">${s.type}</td>
+                                                <td class="p-4 text-sm text-slate-300">${s.desc}</td>
+                                            </tr>
+                                        `,
+                                          )
+                                          .join("")}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+        } else if (module.id === "embeddings") {
+          html += `
+                    <div class="grid lg:grid-cols-2 gap-8">
+                        <div>
+                             <h3 class="text-xl font-bold text-slate-200 mb-4">Espaço Vetorial Latente</h3>
+                             <p class="text-slate-400 mb-4">Visualização simplificada de como conceitos semânticos se agrupam em 3D. Observe como "Rei" e "Rainha" mantêm uma relação vetorial similar a "Homem" e "Mulher".</p>
+                             <ul class="space-y-3 mb-6">
+                                ${module.content.concepts
+                                  .map(
+                                    (c) => `
+                                    <li class="bg-slate-800 p-3 rounded border border-slate-700 shadow-sm">
+                                        <div class="font-bold text-sm text-blue-400">${c.title}</div>
+                                        <div class="text-xs text-slate-400 mt-1">${c.desc}</div>
+                                    </li>
+                                `,
+                                  )
+                                  .join("")}
+                             </ul>
+                        </div>
+                        <div class="bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700">
+                            <div id="embedding-chart" class="plotly-container"></div>
+                            <div class="text-center text-xs text-slate-500 mt-2">Simulação Interativa Plotly.js</div>
+                        </div>
+                    </div>
+                `;
+        } else if (module.id === "chunking") {
+          html += `
+                     <div class="grid lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-1 space-y-4">
+                            <h3 class="font-bold text-slate-200">Estratégias</h3>
+                            ${module.content.strategies
+                              .map(
+                                (s) => `
+                                <button onclick="updateChunking('${s.id}')" 
+                                    class="w-full text-left p-4 rounded-lg border transition-all
+                                    ${appState.chunkingMode === s.id ? "bg-blue-600 text-white border-blue-500 shadow-md" : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"}">
+                                    <div class="font-bold text-sm">${s.name}</div>
+                                    <div class="text-xs opacity-80 mt-1">${s.desc}</div>
+                                </button>
+                            `,
+                              )
+                              .join("")}
+                        </div>
+                        <div class="lg:col-span-2">
+                            <h3 class="font-bold text-slate-200 mb-2">Visualizador de Fragmentação</h3>
+                            <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 font-mono text-sm leading-relaxed shadow-inner h-96 overflow-y-auto text-slate-300" id="chunk-display">
+                                <!-- Content injected by JS -->
+                            </div>
+                            <p class="text-xs text-slate-500 mt-2 text-right">Passar o mouse sobre os blocos mostra os limites do chunk.</p>
+                        </div>
+                    </div>
+                `;
+        } else if (module.id === "vector-stores") {
+          html += `
+                    <div class="space-y-8">
+                        <div class="bg-slate-800 text-slate-100 p-8 rounded-2xl shadow-xl overflow-hidden relative border border-slate-700">
+                            <div class="relative z-10">
+                                <h3 class="text-2xl font-bold mb-2 text-blue-400">${module.content.scann_deep_dive.title}</h3>
+                                <p class="text-blue-300 font-mono mb-6">${module.content.scann_deep_dive.concept}</p>
+                                <div class="grid md:grid-cols-2 gap-8">
+                                    <div>
+                                        <p class="leading-relaxed text-slate-300">${module.content.scann_deep_dive.explanation}</p>
+                                    </div>
+                                    <div class="bg-slate-900/50 p-4 rounded backdrop-blur-sm border border-slate-700">
+                                        <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Impacto na Escala</div>
+                                        <div class="flex justify-between items-end mb-1">
+                                            <span>Recall@10</span>
+                                            <span class="font-bold text-blue-400">~98%</span>
+                                        </div>
+                                        <div class="w-full bg-slate-800 h-2 rounded mb-3"><div class="bg-blue-500 h-2 rounded" style="width: 98%"></div></div>
+                                        
+                                        <div class="flex justify-between items-end mb-1">
+                                            <span>Compressão</span>
+                                            <span class="font-bold text-emerald-400">Alta</span>
+                                        </div>
+                                        <div class="w-full bg-slate-800 h-2 rounded"><div class="bg-emerald-500 h-2 rounded" style="width: 90%"></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Decor -->
+                            <div class="absolute -right-20 -bottom-20 w-64 h-64 bg-blue-900/20 rounded-full blur-3xl opacity-50"></div>
+                        </div>
+
+                        <div class="bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-700">
+                             <h4 class="font-bold text-slate-200 mb-4 text-center">Comparativo de Latência (ms) em 1M Vetores</h4>
+                             <div class="chart-container mx-auto">
+                                <canvas id="vectorChart"></canvas>
+                             </div>
+                        </div>
+                    </div>
+                `;
+        } else if (module.id === "retrieval") {
+          html += `
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <h3 class="text-xl font-bold text-slate-200">Hybrid Search & Re-ranking</h3>
+                            ${module.content.concepts
+                              .map(
+                                (c) => `
+                                <div class="bg-slate-800 p-4 rounded-lg shadow-sm border-l-4 border-emerald-500">
+                                    <h4 class="font-bold text-slate-200">${c.title}</h4>
+                                    <p class="text-sm text-slate-400 mt-1">${c.desc}</p>
+                                </div>
+                            `,
+                              )
+                              .join("")}
+                            
+                            <div class="mt-6 p-4 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-300">
+                                <strong class="text-slate-100">Exemplo:</strong> "Motor V8 da Ferrari 2023"
+                                <ul class="list-disc pl-5 mt-2 space-y-1">
+                                    <li><span class="text-blue-400 font-bold">Sparse (BM25):</span> Pega "V8", "2023" (Exato).</li>
+                                    <li><span class="text-blue-400 font-bold">Dense (Vector):</span> Pega "Motor", "Ferrari" (Semântico).</li>
+                                    <li><span class="text-emerald-400 font-bold">Cross-Encoder:</span> Reordena para remover tratores ou modelos V6.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-xl shadow border border-slate-700 flex flex-col items-center justify-center">
+                            <!-- CSS Flowchart for Retrieval -->
+                            <div class="flex flex-col items-center w-full max-w-xs space-y-2">
+                                <div class="w-full p-3 bg-slate-700 border border-slate-600 rounded text-center text-sm font-bold text-slate-200">Query do Usuário</div>
+                                <div class="text-slate-500">↓</div>
+                                <div class="flex w-full gap-2">
+                                    <div class="flex-1 p-2 bg-blue-900/30 border border-blue-800/50 rounded text-center text-xs text-blue-200">Vector Search<br>(ANN)</div>
+                                    <div class="flex-1 p-2 bg-emerald-900/30 border border-emerald-800/50 rounded text-center text-xs text-emerald-200">Keyword Search<br>(BM25)</div>
+                                </div>
+                                <div class="text-slate-500">↘ ↙</div>
+                                <div class="w-full p-2 bg-slate-700 border border-slate-600 rounded text-center text-xs font-bold text-slate-200">Reciprocal Rank Fusion (RRF)</div>
+                                <div class="text-slate-500">↓</div>
+                                <div class="w-full p-2 bg-indigo-900/30 border border-indigo-800/50 rounded text-center text-xs font-bold text-indigo-300">Re-ranking (Cross-Encoder)</div>
+                                <div class="text-slate-500">↓</div>
+                                <div class="w-full p-3 bg-blue-600 text-white rounded text-center text-sm font-bold shadow-lg">Top-K Contexto</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+        } else if (module.id === "context" || module.id === "memory-kb") {
+          html += `
+                    <div class="bg-slate-800 p-8 rounded-xl shadow-lg border border-slate-700 text-center">
+                        <h3 class="text-2xl font-bold text-slate-100 mb-4 mt-2">${module.title}</h3>
+                        <p class="text-lg text-slate-400 max-w-2xl mx-auto mb-6">${module.content.intro}</p>
+                        ${
+                          module.content.strategy
+                            ? `
+                            <div class="bg-blue-900/20 inline-block p-4 rounded-lg text-blue-300 font-medium border border-blue-800">
+                                Estratégia: ${module.content.strategy}
+                            </div>
+                        `
+                            : ""
+                        }
+                        ${
+                          module.content.example
+                            ? `
+                            <div class="mt-6 text-left bg-slate-900 p-6 rounded-lg border border-slate-700">
+                                <span class="font-bold text-slate-500 text-xs uppercase block mb-2">Exemplo Prático</span>
+                                <p class="font-mono text-sm text-slate-300">${module.content.example}</p>
+                            </div>
+                        `
+                            : ""
+                        }
+                    </div>
+                `;
+        } else if (module.id === "evaluation") {
+          html += `
+                    <div class="space-y-8">
+                        <div class="bg-slate-800/80 border border-slate-700 p-5 rounded-xl">
+                            <h3 class="text-lg font-bold mb-2 text-blue-400">O que é o framework RAGAS?</h3>
+                            <p class="text-slate-300 text-sm leading-relaxed">${module.content.what_is_ragas}</p>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-8 items-start">
+                            <div>
+                                <h3 class="text-xl font-bold mb-4 text-slate-200">Por que não BLEU/ROUGE?</h3>
+                                <p class="text-slate-400 mb-6">${module.content.intro}</p>
+                                <h4 class="text-lg font-bold mb-3 text-slate-200">Métricas RAGAS</h4>
+                                <div class="space-y-4">
+                                    ${module.content.metrics
+                                      .map(
+                                        (m) => `
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-2 h-2 mt-2 rounded-full bg-blue-500 shrink-0"></div>
+                                            <div>
+                                                <div class="font-bold text-slate-200">${m.name}</div>
+                                                <div class="text-sm text-slate-400">${m.desc}</div>
+                                            </div>
+                                        </div>
+                                    `,
+                                      )
+                                      .join("")}
+                                </div>
+                            </div>
+                            <div class="bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-700">
+                                <h4 class="text-sm font-bold text-slate-300 mb-3 text-center">Radar de avaliação (exemplo)</h4>
+                                <div class="chart-container mx-auto">
+                                    <canvas id="ragasChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+        } else if (module.id === "advanced") {
+          html += `
+                    <div class="space-y-6">
+                        <div class="bg-slate-800/80 border border-slate-700 border-l-4 border-l-blue-500 p-5 rounded-xl">
+                            <p class="text-slate-300 leading-relaxed">${module.content.intro}</p>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-slate-800 border border-slate-700 text-slate-200 p-6 rounded-xl shadow-lg relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
+                                <div class="text-xl font-bold mb-3 text-indigo-400">GraphRAG</div>
+                                <p class="text-slate-400 text-sm mb-4 leading-relaxed">${module.content.graph}</p>
+                                <div class="bg-slate-900/80 p-3 rounded text-xs font-mono border border-slate-700 text-slate-300">
+                                    Query: "Tema principal?"<br>
+                                    Graph: Detecta comunidades de nós -> Resumo Hierárquico.
+                                </div>
+                            </div>
+                            <div class="bg-slate-800 border border-slate-700 text-slate-200 p-6 rounded-xl shadow-lg relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
+                                <div class="text-xl font-bold mb-3 text-emerald-400">Agentic RAG</div>
+                                <p class="text-slate-400 text-sm mb-4 leading-relaxed">${module.content.agentic}</p>
+                                <div class="bg-slate-900/80 p-3 rounded text-xs font-mono border border-slate-700 text-slate-300">
+                                    Loop: Thought -> Act (Search) -> Obs -> Thought -> Act...
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl">
+                            <h4 class="font-bold text-slate-200 mb-4">Exemplo Multi-Hop (CEO Apple)</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3 text-sm">
+                                    <span class="bg-slate-700 px-2 py-1 rounded text-slate-300 font-bold border border-slate-600">Step 1</span>
+                                    <span class="text-slate-300">Quem é o CEO? <span class="text-blue-400">→ Tim Cook</span></span>
+                                </div>
+                                <div class="flex items-center gap-3 text-sm">
+                                    <span class="bg-slate-700 px-2 py-1 rounded text-slate-300 font-bold border border-slate-600">Step 2</span>
+                                    <span class="text-slate-300">Onde nasceu/País sede? <span class="text-blue-400">→ EUA</span></span>
+                                </div>
+                                <div class="flex items-center gap-3 text-sm">
+                                    <span class="bg-slate-700 px-2 py-1 rounded text-slate-300 font-bold border border-slate-600">Step 3</span>
+                                    <span class="text-slate-300">Política monetária EUA? <span class="text-blue-400">→ Taxas Fed Altas</span></span>
+                                </div>
+                                <div class="p-3 bg-blue-900/20 border border-blue-800 rounded text-blue-300 font-bold text-sm mt-2">
+                                    Síntese: O aumento das taxas nos EUA impacta a importação...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+        }
+
+        return html;
+      }
+
+      // --- INTERACTIVITY & CHARTS ---
+      function initSectionInteractions(id) {
+        if (id === "embeddings") {
+          renderEmbeddingChart();
+        } else if (id === "chunking") {
+          updateChunking(appState.chunkingMode);
+        } else if (id === "vector-stores") {
+          renderVectorChart();
+        } else if (id === "evaluation") {
+          renderRagasChart();
+        }
+      }
+
+      function renderEmbeddingChart() {
+        // Simulated 3D Data Points for Word Embeddings
+        const trace1 = {
+          x: [1, 1.2, 4, 4.2, 2.5, 2.7], // X coordinates
+          y: [1, 1.1, 4, 4.1, 2.5, 2.6], // Y coordinates
+          z: [1, 1.2, 1, 1.1, 5, 5.2], // Z coordinates
+          mode: "markers+text",
+          type: "scatter3d",
+          text: ["Rei", "Rainha", "Homem", "Mulher", "Maçã", "Pera"],
+          textposition: "top center",
+          textfont: { color: "#f8fafc" },
+          marker: {
+            size: 6,
+            color: [
+              "#3b82f6",
+              "#ec4899",
+              "#3b82f6",
+              "#ec4899",
+              "#10b981",
+              "#10b981",
+            ],
+            opacity: 0.8,
+          },
+        };
+
+        const layout = {
+          margin: { l: 0, r: 0, b: 0, t: 0 },
+          scene: {
+            xaxis: { title: "Dim 1", color: "#94a3b8", gridcolor: "#334155" },
+            yaxis: { title: "Dim 2", color: "#94a3b8", gridcolor: "#334155" },
+            zaxis: { title: "Dim 3", color: "#94a3b8", gridcolor: "#334155" },
+          },
+          paper_bgcolor: "rgba(0,0,0,0)",
+          plot_bgcolor: "rgba(0,0,0,0)",
+        };
+
+        Plotly.newPlot("embedding-chart", [trace1], layout, {
+          responsive: true,
+          displayModeBar: false,
+        });
+      }
+
+      function renderVectorChart() {
+        const ctx = document.getElementById("vectorChart").getContext("2d");
+        Chart.defaults.color = "#94a3b8";
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: ["Brute Force (Exact)", "HNSW (Approx)", "ScaNN (Google)"],
+            datasets: [
+              {
+                label: "Latência (ms) - Menor é Melhor",
+                data: [250, 15, 8],
+                backgroundColor: ["#ef4444", "#f59e0b", "#3b82f6"],
+                borderRadius: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: "bottom", labels: { color: "#e2e8f0" } },
+              tooltip: {
+                callbacks: {
+                  afterBody: (ctx) => {
+                    const index = ctx[0].dataIndex;
+                    if (index === 2)
+                      return "Usa Quantização Anisotrópica para maximizar score.";
+                    return "";
+                  },
+                },
+              },
+            },
+            scales: {
+              x: { grid: { color: "#334155" }, ticks: { color: "#cbd5e1" } },
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: "Milissegundos (ms)",
+                  color: "#94a3b8",
+                },
+                grid: { color: "#334155" },
+                ticks: { color: "#cbd5e1" },
+              },
+            },
+          },
+        });
+      }
+
+      function renderRagasChart() {
+        const ctx = document.getElementById("ragasChart").getContext("2d");
+        Chart.defaults.color = "#94a3b8";
+        new Chart(ctx, {
+          type: "radar",
+          data: {
+            labels: [
+              "Faithfulness",
+              "Answer Relevance",
+              "Context Precision",
+              "Context Recall",
+              "Harmfulness (Inv)",
+            ],
+            datasets: [
+              {
+                label: "Modelo RAG Otimizado",
+                data: [0.92, 0.88, 0.85, 0.9, 0.98],
+                fill: true,
+                backgroundColor: "rgba(59, 130, 246, 0.2)",
+                borderColor: "rgb(59, 130, 246)",
+                pointBackgroundColor: "rgb(59, 130, 246)",
+                pointBorderColor: "#fff",
+                pointHoverBackgroundColor: "#fff",
+                pointHoverBorderColor: "rgb(59, 130, 246)",
+              },
+              {
+                label: "RAG Ingênuo (Baseline)",
+                data: [0.65, 0.7, 0.55, 0.6, 0.9],
+                fill: true,
+                backgroundColor: "rgba(100, 116, 139, 0.2)",
+                borderColor: "rgb(100, 116, 139)",
+                pointBackgroundColor: "rgb(100, 116, 139)",
+                borderDash: [5, 5],
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              r: {
+                angleLines: { display: true, color: "#334155" },
+                grid: { color: "#334155" },
+                pointLabels: { color: "#e2e8f0" },
+                ticks: { backdropColor: "transparent", color: "#94a3b8" },
+                suggestedMin: 0,
+                suggestedMax: 1,
+              },
+            },
+          },
+        });
+      }
+
+      // --- CHUNKING LOGIC ---
+      const sampleText =
+        "O Retrieval-Augmented Generation (RAG) é um paradigma que mitiga a alucinação ao condicionar a geração. Essencialmente, é a injeção de memória não-paramétrica. O pipeline padrão converte texto discreto em espaço vetorial contínuo.";
+
+      function updateChunking(mode) {
+        appState.chunkingMode = mode;
+
+        const buttons = document.querySelectorAll(
+          "button[onclick^='updateChunking']",
+        );
+        buttons.forEach((btn) => {
+          if (btn.getAttribute("onclick").includes(mode)) {
+            btn.className =
+              "w-full text-left p-4 rounded-lg border transition-all bg-blue-600 text-white border-blue-500 shadow-md";
+          } else {
+            btn.className =
+              "w-full text-left p-4 rounded-lg border transition-all bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700";
+          }
+        });
+
+        const display = document.getElementById("chunk-display");
+        display.innerHTML = ""; // Clear
+
+        if (mode === "fixed") {
+          const words = sampleText.split(" ");
+          let currentChunk = [];
+          let html = '<div class="flex flex-wrap gap-2">';
+
+          words.forEach((word, i) => {
+            currentChunk.push(word);
+            if (currentChunk.length >= 6 || i === words.length - 1) {
+              html += `<span class="chunk-segment bg-slate-800 hover:bg-slate-700 border border-slate-600 p-1 m-1 rounded text-slate-300" title="Chunk Fixo">${currentChunk.join(" ")}</span>`;
+              currentChunk = [];
+            }
+          });
+          html += "</div>";
+          display.innerHTML = html;
+        } else if (mode === "semantic") {
+          const sentences = sampleText.split(". ");
+          let html = '<div class="space-y-2">';
+          sentences.forEach((s) => {
+            if (s.trim().length > 0) {
+              html += `<div class="chunk-segment chunk-border-semantic text-slate-300" title="Chunk Semântico (Baseado em Sentença)">${s}.</div>`;
+            }
+          });
+          html += "</div>";
+          display.innerHTML = html;
+        } else if (mode === "parent") {
+          let html = `
+                    <div class="relative p-4 bg-slate-800 border-2 border-dashed border-slate-600 rounded-lg">
+                        <span class="absolute top-0 right-0 bg-slate-700 text-slate-300 text-xs px-2 py-1 rounded-bl border-b border-l border-slate-600">Parent Document (Contexto)</span>
+                        <p class="opacity-70 mt-2 text-slate-300">${sampleText}</p>
+                        
+                        <div class="mt-4 flex gap-2 justify-center">
+                            <div class="bg-blue-600 text-white p-2 rounded text-xs shadow-lg transform -translate-y-6">Child Chunk 1</div>
+                            <div class="bg-blue-600 text-white p-2 rounded text-xs shadow-lg transform -translate-y-6">Child Chunk 2</div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-center mt-2 text-blue-400 font-bold">O Vector Store busca os blocos azuis (Child), mas o LLM recebe o bloco grande (Parent).</p>
+                 `;
+          display.innerHTML = html;
+        }
+      }
+
+      // --- APP START ---
+      init();
+    </script>
+  </body>
+</html>

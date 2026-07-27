@@ -1,0 +1,49 @@
+# ============================================================================
+# Governance Gateway - Dependências do Projeto
+# ============================================================================
+# Este arquivo lista todas as bibliotecas Python necessárias para executar
+# o sistema de roteamento de modelos LLM.
+
+# Google Cloud Vertex AI SDK
+# Usado para integração com os modelos Gemini (Pro e Flash) via Vertex AI
+# Em produção, este SDK será usado para fazer chamadas reais aos modelos
+google-cloud-aiplatform>=1.38.0
+
+# PyYAML - Parser de arquivos YAML
+# Necessário para carregar as políticas de roteamento e configurações
+# (model_policy.yaml, safety_settings.yaml, user_intent.yaml)
+pyyaml>=6.0.1
+
+# Jinja2 - Engine de templates
+# Usado para processar o template audit_master.jinja2 e injetar variáveis
+# Permite versionamento e reutilização de prompts do sistema
+jinja2>=3.1.2
+
+# Rich - Biblioteca para output formatado no terminal
+# Usado no main.py para criar interfaces bonitas com tabelas, painéis e cores
+# Melhora a experiência de visualização durante a demonstração
+rich>=13.7.0
+
+# Pydantic - Validação de dados com type hints
+# Útil para validar estruturas de dados e garantir type safety
+# Pode ser usado para validar respostas do LLM e configurações YAML
+pydantic>=2.5.0
+
+# Pytest - Framework de testes unitários
+# Usado para criar e executar testes automatizados
+# Garante qualidade e confiabilidade do código
+pytest>=7.4.0
+pytest-cov>=4.1.0  # Para cobertura de código
+
+# Tiktoken - Contagem precisa de tokens para modelos Gemini
+# Usado para cálculo preciso de custos (FinOps) - Aula 01
+# Em produção, a API do Vertex AI retorna tokens reais, mas tiktoken
+# permite estimativa precisa antes da chamada
+tiktoken>=0.5.0
+
+# Google Gen AI SDK - SDK atual para chamar modelos Gemini
+# (substitui vertexai.generative_models, removido em jun/2026)
+google-genai>=1.0.0
+
+# Carrega variáveis de ambiente do arquivo .env
+python-dotenv>=1.0.0

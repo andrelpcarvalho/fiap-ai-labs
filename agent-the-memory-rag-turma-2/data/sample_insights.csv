@@ -1,0 +1,3 @@
+session_id,customer_id,tier,content
+sessao_premium,cli_001,premium,"Cliente premium. Histórico: 3 financiamentos conosco. Só aceita taxas abaixo de 1,0% a.m. Perfil conservador na negociação."
+sessao_002,cli_002,standard,"Sessão anterior: recusou proposta de 1,2%. Pediu prazo de 48 meses. Demonstrou sensibilidade a seguro embutido."

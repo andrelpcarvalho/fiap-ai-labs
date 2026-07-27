@@ -1,0 +1,61 @@
+# ============================================================================
+# Configurações de Segurança (Safety Settings) - Vertex AI
+# ============================================================================
+# Define os níveis de bloqueio para conteúdo potencialmente prejudicial
+# que o modelo pode gerar ou processar.
+#
+# 📚 NOTA PEDAGÓGICA - Contexto do Curso:
+#
+# ⚠️ Aula 01 - Por que este arquivo existe mas não é usado:
+# Na Aula 01, focamos em FinOps e estrutura ADK. Usamos simulação de LLM
+# (sem chamadas reais ao Vertex AI), então safety_settings não são aplicadas.
+# O arquivo está aqui para demonstrar a estrutura completa do ADK.
+#
+# 🛡️ Aula 02 - Intent Guardrail:
+# Na próxima aula, implementaremos validação de intenção do usuário ANTES
+# de chamar o modelo. Isso é complementar aos safety_settings:
+# - Intent Guardrail: Valida a pergunta do usuário (prompt injection, etc.)
+# - Safety Settings: Valida a resposta do modelo (conteúdo prejudicial)
+#
+# 🔗 Aula 03 - Integração Real com Vertex AI:
+# Quando substituirmos a simulação por chamadas reais ao Vertex AI,
+# estas configurações serão aplicadas automaticamente:
+# ```python
+# model = GenerativeModel(
+#     model_name="gemini-2.5-pro",
+#     safety_settings=safety_settings  # Carregadas deste arquivo
+# )
+# ```
+#
+# Estas configurações são aplicadas quando fazemos chamadas reais ao Vertex AI.
+# Na demonstração atual (mock), estas configurações não são utilizadas,
+# mas estão aqui para referência quando integrar com a API real.
+#
+# Categorias de Harm (Google Cloud Vertex AI):
+# - HARM_CATEGORY_HARASSMENT: Conteúdo de assédio ou bullying
+# - HARM_CATEGORY_HATE_SPEECH: Discurso de ódio
+# - HARM_CATEGORY_SEXUALLY_EXPLICIT: Conteúdo sexualmente explícito
+# - HARM_CATEGORY_DANGEROUS_CONTENT: Conteúdo perigoso (violência, etc.)
+#
+# Níveis de Threshold:
+# - BLOCK_NONE: Não bloqueia nada
+# - BLOCK_ONLY_HIGH: Bloqueia apenas conteúdo de alto risco
+# - BLOCK_MEDIUM_AND_ABOVE: Bloqueia médio e alto (recomendado)
+# - BLOCK_LOW_AND_ABOVE: Bloqueia baixo, médio e alto (mais restritivo)
+
+safety_settings:
+  # Bloqueia assédio de nível médio ou superior
+  - category: HARM_CATEGORY_HARASSMENT
+    threshold: BLOCK_MEDIUM_AND_ABOVE
+
+  # Bloqueia discurso de ódio de nível médio ou superior
+  - category: HARM_CATEGORY_HATE_SPEECH
+    threshold: BLOCK_MEDIUM_AND_ABOVE
+
+  # Bloqueia conteúdo sexualmente explícito de nível médio ou superior
+  - category: HARM_CATEGORY_SEXUALLY_EXPLICIT
+    threshold: BLOCK_MEDIUM_AND_ABOVE
+
+  # Bloqueia conteúdo perigoso de nível médio ou superior
+  - category: HARM_CATEGORY_DANGEROUS_CONTENT
+    threshold: BLOCK_MEDIUM_AND_ABOVE

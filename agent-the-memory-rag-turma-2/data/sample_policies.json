@@ -1,0 +1,12 @@
+[
+  {
+    "tipo": "politica_credito",
+    "tier": "premium",
+    "vigencia": "2025",
+    "content": "Para cliente premium, margem máxima de desconto na taxa: 0,3 p.p. Acima disso, encaminhar para gerente."
+  },
+  {
+    "tipo": "handoff",
+    "content": "Handoff obrigatório após 3 recusas de taxa na mesma sessão. Registrar motivo da recusa no CRM."
+  }
+]

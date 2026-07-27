@@ -1,0 +1,6 @@
+tipo,valor,condicao,content
+manutencao,0,Conta premium isenta de taxa de manutenção mensal.,Conta premium isenta de taxa de manutenção mensal. Demais contas: R$ 25,00/mês.
+ted,0,Até 5 TEDs grátis para conta premium.,TED: isento para conta premium até 5 por mês. Após isso, R$ 15,00 por TED.
+saque,0,Saques ilimitados em rede própria.,Saques em rede própria: ilimitados para conta premium. Saques em rede 24h: R$ 10,00 cada.
+cartao_segunda_via,35,Segunda via do cartão.,Segunda via de cartão: R$ 35,00 para todos os clientes.
+emprestimo_taxa_premium,0.85,Taxa especial para perfil premium.,Empréstimo pessoal: taxa a partir de 0,85% a.m. para clientes premium; 1,20% a.m. para standard.
