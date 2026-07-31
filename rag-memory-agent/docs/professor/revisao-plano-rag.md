@@ -87,7 +87,7 @@ Com essas melhorias, uma próxima iteração do plano (ou um “Plano v2” para
 
 ## 5. Implementação das melhorias
 
-As melhorias acima foram implementadas em blocos (ver [state_rag.md](../state_rag.md), seção "Melhorias pós-revisão do plano"):
+As melhorias acima foram implementadas em blocos (ver [state_rag.md](../../state_rag.md), seção "Melhorias pós-revisão do plano"):
 
 - **Bloco A:** Documentação em docs/architecture.md (fórmula de similaridade, decisão when where vazio, tabela Chroma/Vertex/Mock, dimensão mock vs Vertex); critérios de conclusão nos Blocos 1–3 do state_rag; docstrings em memory_gateway (comportamento por backend e when where vazio).
 - **Bloco B:** Teste E2E `test_rag_e2e_index_search_with_where` (indexar CSV com session_id, upsert Chroma, buscar com query e where_metadata, assert conteúdo do insight).

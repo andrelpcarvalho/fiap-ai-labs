@@ -139,4 +139,4 @@ python scripts/rag_query.py "Qual a renda mínima da Conta Premium?"
 
 ## Próximo
 
-[Lab 3 — Construa seu próprio Chunker](lab3_chunker_proprio.md): implementar `by_tokens` com tiktoken e reavaliar.
+[Lab 3 — Construa seu próprio Chunker](05-lab3-chunker-por-tokens.md): implementar `by_tokens` com tiktoken e reavaliar.

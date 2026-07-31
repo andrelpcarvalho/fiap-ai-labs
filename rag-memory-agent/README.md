@@ -60,7 +60,7 @@ embedding:
 
 ## Lab guiado (1 hora) — ciclo RAG completo
 
-Passo a passo: [docs/lab_rag_chromadb_1h.md](docs/lab_rag_chromadb_1h.md)
+Passo a passo: [docs/aula-01-chunking-e-embeddings/02-lab-rag-chromadb-1h.md](docs/aula-01-chunking-e-embeddings/02-lab-rag-chromadb-1h.md)
 
 Resumo:
 
@@ -79,11 +79,13 @@ python scripts/rag_query.py "Quais são as tarifas da conta premium e as condiç
 
 | Lab | Tema | Doc |
 |-----|------|-----|
-| 1 | Anatomia do chunking (estratégias, size, overlap) | [docs/labs/lab1_anatomia_chunking.md](docs/labs/lab1_anatomia_chunking.md) |
-| 2 | Chunking × qualidade de retrieval (hit rate@k) | [docs/labs/lab2_chunking_retrieval.md](docs/labs/lab2_chunking_retrieval.md) |
-| 3 | Chunker próprio `by_tokens` (tiktoken) | [docs/labs/lab3_chunker_proprio.md](docs/labs/lab3_chunker_proprio.md) |
+| 1 | Anatomia do chunking (estratégias, size, overlap) | [docs/aula-01-chunking-e-embeddings/03-lab1-anatomia-chunking.md](docs/aula-01-chunking-e-embeddings/03-lab1-anatomia-chunking.md) |
+| 2 | Chunking × qualidade de retrieval (hit rate@k) | [docs/aula-01-chunking-e-embeddings/04-lab2-chunking-retrieval.md](docs/aula-01-chunking-e-embeddings/04-lab2-chunking-retrieval.md) |
+| 3 | Chunker próprio `by_tokens` (tiktoken) | [docs/aula-01-chunking-e-embeddings/05-lab3-chunker-por-tokens.md](docs/aula-01-chunking-e-embeddings/05-lab3-chunker-por-tokens.md) |
 
-Roteiro da aula: [docs/aula1_roteiro.md](docs/aula1_roteiro.md)
+Roteiro da aula: [docs/aula-01-chunking-e-embeddings/01-roteiro.md](docs/aula-01-chunking-e-embeddings/01-roteiro.md)
+
+Índice completo da documentação (aulas 1–3, referência e material do professor): [docs/README.md](docs/README.md)
 
 ## Arquitetura (visão rápida)
 
@@ -143,4 +145,5 @@ pytest tests/ -v
 | `chromadb` / `pypdf` não encontrado | `pip install -e ".[lab]"` na raiz |
 | Consulta vazia após indexar | `backend: chroma` em `config/memory_policy.yaml`; confira `data/chroma` |
 | Dimensão incompatível no Chroma | Apague `data/chroma` e reindexe após trocar embedding backend |
+| Erro ao abrir `data/chroma` criado com chromadb 0.5.x | Apague `data/chroma` e reindexe (o projeto agora usa chromadb 1.x) |
 | Embeddings mock na mensagem de log | Instale `[lab]` ou defina `embedding.backend: local` |

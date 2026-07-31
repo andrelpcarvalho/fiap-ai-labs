@@ -162,7 +162,7 @@ loaders (PDF/CSV/TXT) → chunking → embedding local → ChromaDB
 query → embedding → busca → texto no prompt
 ```
 
-Próximo na Aula 1: [labs de chunking](labs/lab1_anatomia_chunking.md).
+Próximo na Aula 1: [labs de chunking](03-lab1-anatomia-chunking.md).
 
 ---
 

@@ -156,4 +156,4 @@ Não precisa integrar ao Chroma; valide com `chunk_inspect` ou um script própri
 
 - Solução: [`solucoes/lab3_by_tokens.py`](solucoes/lab3_by_tokens.py)
 - [tiktoken](https://github.com/openai/tiktoken)
-- Lab 2: [`lab2_chunking_retrieval.md`](lab2_chunking_retrieval.md)
+- Lab 2: [`04-lab2-chunking-retrieval.md`](04-lab2-chunking-retrieval.md)

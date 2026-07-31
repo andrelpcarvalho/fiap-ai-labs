@@ -60,4 +60,4 @@ Cada chunk é um objeto com:
 - Config no gateway: `max_documents`, `min_similarity_score` aplicados na busca Chroma; filtro por metadados (`where`) opcional.
 - Query estruturada no agent_router: session_id + trecho da mensagem do cliente (até 200 caracteres).
 - Embedding: task type `RETRIEVAL_DOCUMENT` na indexação e `RETRIEVAL_QUERY` na consulta.
-- Ver [docs/architecture.md](architecture.md) para arquitetura completa e fluxo RAG.
+- Ver [docs/referencia/arquitetura.md](arquitetura.md) para arquitetura completa e fluxo RAG.

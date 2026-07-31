@@ -46,7 +46,7 @@ Pergunta para a sala: *“Se eu mudar só o tamanho do chunk, a resposta do agen
 
 ## Bloco B — Rodar o projeto (lab 1h) (50–60 min)
 
-Seguir: [lab_rag_chromadb_1h.md](lab_rag_chromadb_1h.md)
+Seguir: [02-lab-rag-chromadb-1h.md](02-lab-rag-chromadb-1h.md)
 
 Momento “aha”: mesma pergunta **antes** (vazio) e **depois** (trechos).
 
@@ -60,9 +60,9 @@ Ordem sugerida (observar → medir → construir):
 
 | Ordem | Lab | Tempo | Entrega |
 |-------|-----|-------|---------|
-| 1 | [Anatomia do Chunking](labs/lab1_anatomia_chunking.md) | 45–60 min | Tabela `--compare` + discussão |
-| 2 | [Chunking × Retrieval](labs/lab2_chunking_retrieval.md) | 50–60 min | `hit rate@k` nas 3 configs |
-| 3 | [Chunker by_tokens](labs/lab3_chunker_proprio.md) | 50–60 min | pytest verde + eval |
+| 1 | [Anatomia do Chunking](03-lab1-anatomia-chunking.md) | 45–60 min | Tabela `--compare` + discussão |
+| 2 | [Chunking × Retrieval](04-lab2-chunking-retrieval.md) | 50–60 min | `hit rate@k` nas 3 configs |
+| 3 | [Chunker by_tokens](05-lab3-chunker-por-tokens.md) | 50–60 min | pytest verde + eval |
 
 ### Se o tempo apertar no mesmo dia
 

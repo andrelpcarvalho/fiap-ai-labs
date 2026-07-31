@@ -2,7 +2,7 @@
 
 Este documento é voltado ao **professor**. O objetivo é permitir que você explique o projeto **arquivo por arquivo** em aula, na ordem certa das dependências, e que os alunos entendam como cada parte contribui para o **gerenciamento de memória** (Short-Term e Long-Term). Aqui você encontra também o **passo a passo para executar** o projeto em ambiente local ou com mocks.
 
-Para aprofundamento teórico (agente amnésico, FSM, FinOps, OCC), consulte [AULA.md](AULA.md).
+Para aprofundamento teórico (agente amnésico, FSM, FinOps, OCC), consulte [AULA.md](../aula-03-agente-stateful/01-teoria-agente-the-memory.md).
 
 ---
 
@@ -422,4 +422,4 @@ Use estas seções ao abrir cada arquivo na aula.
 
 ---
 
-*Fim do guia. Para teoria e exercícios, use [AULA.md](AULA.md) e [LAB-DESAFIO.md](../LAB-DESAFIO.md).*
+*Fim do guia. Para teoria e exercícios, use [AULA.md](../aula-03-agente-stateful/01-teoria-agente-the-memory.md) e [LAB-DESAFIO.md](../../LAB-DESAFIO.md).*

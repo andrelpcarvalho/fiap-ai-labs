@@ -8,7 +8,7 @@ Este lab guiado implementa um **recurso avançado** no Agente 3 - The Memory: em
 
 ### Por que não incrementar em toda mensagem?
 
-Hoje, em [src/agent_router.py](src/agent_router.py), após cada resposta do LLM o código chama `state.increment_rejection()` **sempre**. Isso funciona na demo (onde as mensagens simuladas são sempre de recusa), mas em produção:
+Hoje, em [src/agent_router.py](../../src/agent_router.py), após cada resposta do LLM o código chama `state.increment_rejection()` **sempre**. Isso funciona na demo (onde as mensagens simuladas são sempre de recusa), mas em produção:
 
 - Mensagens como "Sim, fecho com essa taxa" ou "Preciso de mais detalhes" seriam contadas como recusa.
 - O circuit breaker (handoff após N recusas) seria acionado mesmo sem o cliente ter recusado de fato.
@@ -31,9 +31,9 @@ O ideal é **incrementar apenas quando o conteúdo da conversa indicar que o cli
 
 ## 2. Pré-requisitos
 
-- Ambiente configurado: `.env` com `GOOGLE_API_KEY` ou variáveis Vertex (veja [README.md](../README.md)).
-- Ter lido a seção do orquestrador e do fluxo em [AULA.md](AULA.md) (seções 5 e 6).
-- Opcional: ter completado o [LAB-DESAFIO.md](../LAB-DESAFIO.md) para entender o fluxo de checkpoint.
+- Ambiente configurado: `.env` com `GOOGLE_API_KEY` ou variáveis Vertex (veja [README.md](../../README.md)).
+- Ter lido a seção do orquestrador e do fluxo em [AULA.md](01-teoria-agente-the-memory.md) (seções 5 e 6).
+- Opcional: ter completado o [LAB-DESAFIO.md](../../LAB-DESAFIO.md) para entender o fluxo de checkpoint.
 
 ---
 
@@ -133,7 +133,7 @@ No próximo passo você vai implementar a função de parse e a lógica condicio
 
 ## 6. Passo 3 – Integrar no orquestrador
 
-Abra [src/agent_router.py](src/agent_router.py). Serão necessárias três alterações: import do schema e da função de parse, uma função auxiliar para extrair e parsear o intent, e a lógica condicional em `process_message`.
+Abra [src/agent_router.py](../../src/agent_router.py). Serão necessárias três alterações: import do schema e da função de parse, uma função auxiliar para extrair e parsear o intent, e a lógica condicional em `process_message`.
 
 ### 6.1 Imports
 
@@ -246,7 +246,7 @@ Resumo do que mudou:
 
 O LLM precisa ser instruído a sempre terminar a resposta com uma única linha em JSON.
 
-Abra [prompts/negotiator.jinja2](prompts/negotiator.jinja2) e adicione ao final das diretrizes (por exemplo, após o item 4):
+Abra [prompts/negotiator.jinja2](../../prompts/negotiator.jinja2) e adicione ao final das diretrizes (por exemplo, após o item 4):
 
 ```jinja2
 5. Ao final de CADA resposta, escreva exatamente uma linha em JSON, sem outro texto na mesma linha, com os campos:
@@ -271,7 +271,7 @@ python -m src.main
 
 Comportamento esperado:
 
-- O [main.py](../src/main.py) envia três mensagens simuladas de recusa. Com o novo fluxo, o LLM deve marcar `client_refused_rate: true` nessas mensagens, então o contador deve subir e na terceira recusa o handoff deve ser acionado (mensagem de transferência para especialista).
+- O [main.py](../../src/main.py) envia três mensagens simuladas de recusa. Com o novo fluxo, o LLM deve marcar `client_refused_rate: true` nessas mensagens, então o contador deve subir e na terceira recusa o handoff deve ser acionado (mensagem de transferência para especialista).
 - A resposta exibida ao usuário não deve conter a linha crua do JSON (ela é removida por `_parse_response_and_intent`).
 
 ### 8.2 Teste manual sugerido
@@ -304,8 +304,8 @@ Para validar a detecção condicional, você pode temporariamente alterar as men
 ### Extensões sugeridas
 
 - **Mais campos no intent:** por exemplo `documents_requested: bool` e usar no funil para um estágio "waiting_documents".
-- **Retry em conflito OCC:** em [src/agent_router.py](src/agent_router.py), ao capturar `ConcurrentWriteError` em `save_checkpoint`, chamar `recover_or_create` de novo, reaplicar a mesma lógica de atualização de estado (intent) e tentar `save_checkpoint` novamente (até um limite de tentativas). Ver conceito em [AULA.md](AULA.md) (OCC e Defense in Depth).
+- **Retry em conflito OCC:** em [src/agent_router.py](../../src/agent_router.py), ao capturar `ConcurrentWriteError` em `save_checkpoint`, chamar `recover_or_create` de novo, reaplicar a mesma lógica de atualização de estado (intent) e tentar `save_checkpoint` novamente (até um limite de tentativas). Ver conceito em [AULA.md](01-teoria-agente-the-memory.md) (OCC e Defense in Depth).
 
 ---
 
-**Documentação relacionada:** [AULA.md](AULA.md) (arquitetura e orquestrador) · [LAB-DESAFIO.md](../LAB-DESAFIO.md) (checkpoint e circuit breaker)
+**Documentação relacionada:** [AULA.md](01-teoria-agente-the-memory.md) (arquitetura e orquestrador) · [LAB-DESAFIO.md](../../LAB-DESAFIO.md) (checkpoint e circuit breaker)

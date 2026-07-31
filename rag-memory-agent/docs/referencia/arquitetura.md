@@ -1,6 +1,6 @@
 # Arquitetura do sistema (RAG e agente de negociação)
 
-Documento de referência da arquitetura completa do agente com memória de curto e longo prazo (RAG). Use este arquivo junto com [state_rag.md](../state_rag.md) como contexto entre blocos de implementação.
+Documento de referência da arquitetura completa do agente com memória de curto e longo prazo (RAG). Use este arquivo junto com [state_rag.md](../../state_rag.md) como contexto entre blocos de implementação.
 
 ---
 
@@ -57,22 +57,22 @@ flowchart TB
 ## 3. Fluxo RAG — Indexação
 
 1. **Entrada**: arquivos CSV, JSON ou PDF (config: coluna/campo de texto em indexing.yaml).
-2. **Loaders** ([src/indexing/loaders.py](src/indexing/loaders.py)): carregam documentos com `text` e `metadata` (source, session_id, tier, etc.).
-3. **Chunking** ([src/indexing/chunking.py](src/indexing/chunking.py)): `chunk_text()` com estratégia `fixed` ou `by_paragraph`; tamanho e overlap em config.
-4. **Embedding** ([src/indexing/embedding.py](src/indexing/embedding.py)): `embed_texts(..., for_query=False)` → Vertex com **RETRIEVAL_DOCUMENT** ou mock; um vetor por chunk.
-5. **Vector store** ([src/indexing/vector_store.py](src/indexing/vector_store.py)): `upsert_documents(ids, vectors, metadatas)` → Chroma (persist), Vertex (stub) ou mock (JSONL).
-6. **Config**: [config/indexing.yaml](config/indexing.yaml) (chunking, csv, json, pdf, embedding); [config/memory_policy.yaml](config/memory_policy.yaml) (vector_search.backend, chroma.*, mock.path).
+2. **Loaders** ([src/indexing/loaders.py](../../src/indexing/loaders.py)): carregam documentos com `text` e `metadata` (source, session_id, tier, etc.).
+3. **Chunking** ([src/indexing/chunking.py](../../src/indexing/chunking.py)): `chunk_text()` com estratégia `fixed` ou `by_paragraph`; tamanho e overlap em config.
+4. **Embedding** ([src/indexing/embedding.py](../../src/indexing/embedding.py)): `embed_texts(..., for_query=False)` → Vertex com **RETRIEVAL_DOCUMENT** ou mock; um vetor por chunk.
+5. **Vector store** ([src/indexing/vector_store.py](../../src/indexing/vector_store.py)): `upsert_documents(ids, vectors, metadatas)` → Chroma (persist), Vertex (stub) ou mock (JSONL).
+6. **Config**: [config/indexing.yaml](../../config/indexing.yaml) (chunking, csv, json, pdf, embedding); [config/memory_policy.yaml](../../config/memory_policy.yaml) (vector_search.backend, chroma.*, mock.path).
 
 ---
 
 ## 4. Fluxo RAG — Consulta
 
-1. **Origem**: Em [src/agent_router.py](src/agent_router.py), nas fases `rate_proposed` e `analyzing_credit`, o router monta uma **query enriquecida** (session_id + contexto da mensagem do cliente).
+1. **Origem**: Em [src/agent_router.py](../../src/agent_router.py), nas fases `rate_proposed` e `analyzing_credit`, o router monta uma **query enriquecida** (session_id + contexto da mensagem do cliente).
 2. **Gateway**: `memory_gw.search_customer_insights(query=..., where_metadata=...)` (where opcional para filtrar por session_id ou outro campo).
 3. **Embedding da query**: `embed_texts([query], for_query=True)` → Vertex com **RETRIEVAL_QUERY** (ou mock); garante melhor similaridade semântica na busca.
 4. **Chroma**: `collection.query(query_embeddings=..., n_results=max_documents, where=where_metadata, include=["documents", "distances"])`.
 5. **Pós-processamento (Chroma)**: converter distância cosine em similaridade com `similarity = max(0, 1 - distance)` (evita valor negativo; Chroma retorna distância em que menor = mais similar); filtrar documentos com `similarity >= min_similarity_score`; ordenar por similaridade decrescente; concatenar o texto dos documentos restantes.
-6. **Injeção**: resultado é passado ao template [prompts/context_injector.jinja2](prompts/context_injector.jinja2) como `long_term_insights` e enviado ao LLM junto com a mensagem do usuário.
+6. **Injeção**: resultado é passado ao template [prompts/context_injector.jinja2](../../prompts/context_injector.jinja2) como `long_term_insights` e enviado ao LLM junto com a mensagem do usuário.
 
 ---
 
@@ -114,6 +114,6 @@ O mock produz vetores de **768 dimensões** (mesma dimensão do Vertex com `text
 
 ## 7. Testes
 
-- **Unit**: chunking ([tests/test_indexing.py](tests/test_indexing.py)), loaders CSV/JSON, embedding mock (for_query True/False).
+- **Unit**: chunking ([tests/test_indexing.py](../../tests/test_indexing.py)), loaders CSV/JSON, embedding mock (for_query True/False).
 - **Gateway**: mock (query fixa); Chroma com config temporária — assert de aplicação de min_similarity e ordenação.
 - **E2E**: indexar sample (ex.: data/sample_insights.csv) em Chroma temporário → buscar com query que inclua session_id do CSV e where_metadata → assert que o texto do insight correspondente aparece no resultado.

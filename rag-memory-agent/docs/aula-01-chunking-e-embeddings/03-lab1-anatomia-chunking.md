@@ -189,4 +189,4 @@ Implemente (ou proponha) um modo `strategy_by_source` no CLI: TXT/PDF → `recur
 
 ## Próximo
 
-[Lab 2 — Chunking × Qualidade de Retrieval](lab2_chunking_retrieval.md): as mesmas configs passam a ser medidas com **hit rate@k** usando embeddings locais.
+[Lab 2 — Chunking × Qualidade de Retrieval](04-lab2-chunking-retrieval.md): as mesmas configs passam a ser medidas com **hit rate@k** usando embeddings locais.

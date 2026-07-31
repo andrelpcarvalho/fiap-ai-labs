@@ -68,12 +68,12 @@ Ou seja: **loaders → chunking → [opcional: embedding → vector store]**.
 
 Durante a execução do agente (`python -m src.main` ou via API):
 
-1. O **router** ([src/agent_router.py](src/agent_router.py)) recebe a mensagem do usuário e recupera o estado da sessão.
+1. O **router** ([src/agent_router.py](../../src/agent_router.py)) recebe a mensagem do usuário e recupera o estado da sessão.
 2. Nas fases em que o RAG é usado (`rate_proposed`, `analyzing_credit`), o router monta uma **query enriquecida** (session_id + trecho da mensagem) e chama o **gateway** de memória de longo prazo.
-3. O **LongTermMemoryGateway** ([src/memory_gateway.py](src/memory_gateway.py)) converte a query em vetor, consulta o vector store (Chroma/Vertex/mock), filtra por similaridade e metadados, e devolve o texto dos chunks concatenados.
-4. Esse texto é injetado no prompt via template Jinja2 ([prompts/context_injector.jinja2](prompts/context_injector.jinja2)) e enviado ao LLM como parte da mensagem do usuário.
+3. O **LongTermMemoryGateway** ([src/memory_gateway.py](../../src/memory_gateway.py)) converte a query em vetor, consulta o vector store (Chroma/Vertex/mock), filtra por similaridade e metadados, e devolve o texto dos chunks concatenados.
+4. Esse texto é injetado no prompt via template Jinja2 ([prompts/context_injector.jinja2](../../prompts/context_injector.jinja2)) e enviado ao LLM como parte da mensagem do usuário.
 
-Referência de arquitetura: [docs/architecture.md](docs/architecture.md).
+Referência de arquitetura: [docs/referencia/arquitetura.md](../referencia/arquitetura.md).
 
 ---
 
@@ -138,11 +138,11 @@ Carrega documentos de arquivos CSV, JSON, PDF e TXT e os normaliza para um forma
 - **TXT:** lê o arquivo como texto (UTF-8) e retorna um único documento com `text` igual ao conteúdo e `metadata.source` igual ao nome do arquivo.
 
 **Onde a config é lida?**  
-Os parâmetros do loader (coluna de texto, path JSON, merge de páginas) vêm do CLI ([src/indexing/__main__.py](src/indexing/__main__.py)), que por sua vez lê `config/indexing.yaml` (seções `csv`, `json`, `pdf`).
+Os parâmetros do loader (coluna de texto, path JSON, merge de páginas) vêm do CLI ([src/indexing/__main__.py](../../src/indexing/__main__.py)), que por sua vez lê `config/indexing.yaml` (seções `csv`, `json`, `pdf`).
 
 **Exemplos no repositório:**  
-- [data/sample_insights.csv](data/sample_insights.csv): colunas `session_id`, `customer_id`, `tier`, `content`; cada linha vira um documento com `text` = valor de `content` e `metadata` com os demais campos.  
-- [data/sample_policies.json](data/sample_policies.json): lista de objetos com `tipo`, `tier`, `vigencia`, `content`; cada item vira um documento com `text` = `content` e metadados preservados.
+- [data/sample_insights.csv](../../data/sample_insights.csv): colunas `session_id`, `customer_id`, `tier`, `content`; cada linha vira um documento com `text` = valor de `content` e `metadata` com os demais campos.  
+- [data/sample_policies.json](../../data/sample_policies.json): lista de objetos com `tipo`, `tier`, `vigencia`, `content`; cada item vira um documento com `text` = `content` e metadados preservados.
 
 ---
 
@@ -164,7 +164,7 @@ Divide um texto longo em pedaços (chunks) de tamanho controlado. Chunks menores
 O CLI, para cada documento retornado pelos loaders, chama `chunk_text` com os parâmetros lidos de `indexing.yaml` (`chunk_size_chars`, `overlap_chars`, `strategy`). Cada chunk recebe depois `chunk_index` (índice no documento) e um `chunk_id` global no `__main__.py`.
 
 **Onde a config é lida?**  
-Em [src/indexing/__main__.py](src/indexing/__main__.py): `chunk_cfg = config.get("chunking")`, `chunk_size`, `overlap`, `strategy`.
+Em [src/indexing/__main__.py](../../src/indexing/__main__.py): `chunk_cfg = config.get("chunking")`, `chunk_size`, `overlap`, `strategy`.
 
 ---
 
@@ -294,7 +294,7 @@ Não usa vetores; retorna um texto fixo conforme substring na query (ex.: se "se
 ### 4.7 Uso no agente: src/agent_router.py e prompts/context_injector.jinja2
 
 **Quando o RAG é usado:**  
-No [src/agent_router.py](src/agent_router.py), depois de recuperar a sessão e montar o system prompt do negociador, o router verifica se a fase do funil é `rate_proposed` ou `analyzing_credit`. Só nessas fases a mensagem do usuário é enriquecida com a memória de longo prazo.
+No [src/agent_router.py](../../src/agent_router.py), depois de recuperar a sessão e montar o system prompt do negociador, o router verifica se a fase do funil é `rate_proposed` ou `analyzing_credit`. Só nessas fases a mensagem do usuário é enriquecida com a memória de longo prazo.
 
 **Montagem da query:**  
 - `context_snippet = (customer_message or "").strip()[:200]` (primeiros 200 caracteres da mensagem).  
@@ -306,7 +306,7 @@ No [src/agent_router.py](src/agent_router.py), depois de recuperar a sessão e m
 - Se `insights` não for vazio, o prompt do usuário é substituído pelo resultado do template de injeção:  
   `contextual_prompt = self.injector_template.render(base_prompt=customer_message, long_term_insights=insights)`.
 
-**Template [prompts/context_injector.jinja2](prompts/context_injector.jinja2):**  
+**Template [prompts/context_injector.jinja2](../../prompts/context_injector.jinja2):**  
 - Variáveis: `base_prompt` (mensagem do usuário) e `long_term_insights` (texto concatenado dos chunks).  
 - O template concatena a mensagem do usuário e uma seção “MEMÓRIA DE LONGO PRAZO RECUPERADA” com o conteúdo de `long_term_insights`, instruindo o LLM a usar essas informações para personalizar a resposta.  
 - O resultado (`contextual_prompt`) é enviado ao LLM como a mensagem do usuário (Content + Part).
@@ -322,11 +322,11 @@ Siga estes passos para rodar o pipeline completo com ChromaDB no projeto.
 ### Pré-requisitos
 
 - Python com as dependências do projeto (incluindo `chromadb` em [pyproject.toml](pyproject.toml)).
-- Arquivos de configuração: [config/indexing.yaml](config/indexing.yaml) e [config/memory_policy.yaml](config/memory_policy.yaml).
+- Arquivos de configuração: [config/indexing.yaml](../../config/indexing.yaml) e [config/memory_policy.yaml](../../config/memory_policy.yaml).
 
 ### Passo 1: Configurar o backend Chroma
 
-Edite [config/memory_policy.yaml](config/memory_policy.yaml) e defina:
+Edite [config/memory_policy.yaml](../../config/memory_policy.yaml) e defina:
 
 ```yaml
 vector_search:
@@ -344,10 +344,10 @@ Assim, tanto a indexação quanto a consulta usarão o ChromaDB em `data/chroma`
 
 Use os exemplos do repositório ou seus próprios arquivos:
 
-- [data/sample_insights.csv](data/sample_insights.csv): insights por sessão/cliente (coluna `content` + metadados como `session_id`, `tier`).
-- [data/sample_policies.json](data/sample_policies.json): políticas e regras (campo `content` + metadados).
+- [data/sample_insights.csv](../../data/sample_insights.csv): insights por sessão/cliente (coluna `content` + metadados como `session_id`, `tier`).
+- [data/sample_policies.json](../../data/sample_policies.json): políticas e regras (campo `content` + metadados).
 
-Certifique-se de que o formato está de acordo com o que os loaders esperam (coluna/campo de texto configurados em [config/indexing.yaml](config/indexing.yaml)).
+Certifique-se de que o formato está de acordo com o que os loaders esperam (coluna/campo de texto configurados em [config/indexing.yaml](../../config/indexing.yaml)).
 
 ### Passo 3: Rodar a indexação
 
@@ -370,8 +370,8 @@ Execute o fluxo do agente (ex.: `python -m src.main`). Quando a conversa estiver
 
 ### Passo 6 (opcional): Testes
 
-- [tests/test_indexing.py](tests/test_indexing.py): testes de chunking, loaders (CSV, JSON, TXT) e embedding mock (`for_query` True/False).
-- [tests/test_memory_recall.py](tests/test_memory_recall.py): gateway com mock (degradação), Chroma com filtro por `min_similarity_score` e teste E2E (indexar CSV com session_id, buscar com query + where_metadata e verificar que o conteúdo do insight aparece no resultado).
+- [tests/test_indexing.py](../../tests/test_indexing.py): testes de chunking, loaders (CSV, JSON, TXT) e embedding mock (`for_query` True/False).
+- [tests/test_memory_recall.py](../../tests/test_memory_recall.py): gateway com mock (degradação), Chroma com filtro por `min_similarity_score` e teste E2E (indexar CSV com session_id, buscar com query + where_metadata e verificar que o conteúdo do insight aparece no resultado).
 
 Rodar os testes ajuda a validar que o pipeline e o Chroma estão integrados corretamente.
 
@@ -383,21 +383,21 @@ Rodar os testes ajuda a validar que o pipeline e o Chroma estão integrados corr
 
 | Arquivo | Responsabilidade |
 |---------|------------------|
-| [config/indexing.yaml](config/indexing.yaml) | Chunking, loaders (csv/json/pdf/txt), embedding, uso de mock no vector store. |
-| [config/memory_policy.yaml](config/memory_policy.yaml) | Backend do vector search (chroma/vertex/mock), parâmetros de busca (max_documents, min_similarity_score), paths Chroma/Vertex/mock. |
-| [src/indexing/loaders.py](src/indexing/loaders.py) | Carregar CSV, JSON, PDF e TXT em formato unificado (text + metadata). |
-| [src/indexing/chunking.py](src/indexing/chunking.py) | Dividir texto em chunks (fixed ou by_paragraph). |
-| [src/indexing/embedding.py](src/indexing/embedding.py) | Gerar embeddings (Vertex ou mock); variáveis em .env (GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION). |
-| [src/indexing/vector_store.py](src/indexing/vector_store.py) | Upsert de vetores + metadados em Chroma, Vertex ou mock. |
-| [src/indexing/__main__.py](src/indexing/__main__.py) | CLI: loaders → chunking → [embedding → vector store]; --output e --push. |
-| [src/memory_gateway.py](src/memory_gateway.py) | Consulta à memória de longo prazo: embed da query, busca no vector store, filtro por similaridade e where (Chroma). |
-| [src/agent_router.py](src/agent_router.py) | Orquestração: sessão, RAG (query + where_metadata), injeção no prompt, LLM. |
-| [prompts/context_injector.jinja2](prompts/context_injector.jinja2) | Template que injeta a mensagem do usuário e o texto recuperado (long_term_insights) no prompt. |
+| [config/indexing.yaml](../../config/indexing.yaml) | Chunking, loaders (csv/json/pdf/txt), embedding, uso de mock no vector store. |
+| [config/memory_policy.yaml](../../config/memory_policy.yaml) | Backend do vector search (chroma/vertex/mock), parâmetros de busca (max_documents, min_similarity_score), paths Chroma/Vertex/mock. |
+| [src/indexing/loaders.py](../../src/indexing/loaders.py) | Carregar CSV, JSON, PDF e TXT em formato unificado (text + metadata). |
+| [src/indexing/chunking.py](../../src/indexing/chunking.py) | Dividir texto em chunks (fixed ou by_paragraph). |
+| [src/indexing/embedding.py](../../src/indexing/embedding.py) | Gerar embeddings (Vertex ou mock); variáveis em .env (GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION). |
+| [src/indexing/vector_store.py](../../src/indexing/vector_store.py) | Upsert de vetores + metadados em Chroma, Vertex ou mock. |
+| [src/indexing/__main__.py](../../src/indexing/__main__.py) | CLI: loaders → chunking → [embedding → vector store]; --output e --push. |
+| [src/memory_gateway.py](../../src/memory_gateway.py) | Consulta à memória de longo prazo: embed da query, busca no vector store, filtro por similaridade e where (Chroma). |
+| [src/agent_router.py](../../src/agent_router.py) | Orquestração: sessão, RAG (query + where_metadata), injeção no prompt, LLM. |
+| [prompts/context_injector.jinja2](../../prompts/context_injector.jinja2) | Template que injeta a mensagem do usuário e o texto recuperado (long_term_insights) no prompt. |
 
 ### Documentação existente
 
-- [docs/indexing.md](docs/indexing.md): uso do CLI, configuração, variáveis de ambiente e formato de saída dos chunks.
-- [docs/architecture.md](docs/architecture.md): arquitetura do sistema, fluxo RAG (indexação e consulta), decisões de desenho e tabela de backends.
+- [docs/referencia/pipeline-indexacao.md](../referencia/pipeline-indexacao.md): uso do CLI, configuração, variáveis de ambiente e formato de saída dos chunks.
+- [docs/referencia/arquitetura.md](../referencia/arquitetura.md): arquitetura do sistema, fluxo RAG (indexação e consulta), decisões de desenho e tabela de backends.
 
 ### Variáveis de ambiente (Vertex)
 
@@ -409,4 +409,4 @@ Quando for usar **Vertex AI** (embedding e/ou Vector Search):
 O **`.env`** na raiz do projeto é carregado pelo `src/main.py` (via `load_dotenv`) e pelo script `scripts/rag_query.py`; assim, definir essas variáveis no `.env` dispensa exportá-las no shell para o agente e para a consulta RAG.
 - Para Vector Search: `VECTOR_SEARCH_ENDPOINT_ID`, `VECTOR_SEARCH_INDEX_ID`, `VECTOR_SEARCH_GCS_BUCKET`; opcionalmente `VECTOR_SEARCH_DEPLOYED_INDEX_ID`.
 
-Detalhes em [docs/indexing.md](docs/indexing.md).
+Detalhes em [docs/referencia/pipeline-indexacao.md](../referencia/pipeline-indexacao.md).
