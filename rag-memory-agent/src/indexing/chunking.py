@@ -20,6 +20,7 @@ def chunk_text(
     chunk_size: int,
     overlap: int = 0,
     strategy: str = "fixed",
+    source: str | None = None,          # <-- NOVO: precisa saber a extensão
 ) -> list[str]:
     """
     Divide texto em pedaços.
@@ -37,6 +38,8 @@ def chunk_text(
         return []
 
     text = text.strip()
+    if strategy == "by_source":          # <-- NOVO ramo, antes dos outros
+        return _chunk_by_source(text, chunk_size, overlap, source)
     if strategy == "by_paragraph":
         return _chunk_by_paragraph(text, chunk_size)
     if strategy == "by_sentence":
@@ -72,6 +75,14 @@ def _chunk_by_tokens(text: str, chunk_size: int, overlap: int = 0) -> list[str]:
         start = end - overlap if overlap else end
     return chunks
 
+def _chunk_by_source(text: str, chunk_size: int, overlap: int, source: str | None) -> list[str]:
+    """
+    Roteia por tipo de fonte: CSV -> 1 chunk por linha (unidade semântica já é a linha);
+    demais formatos -> recursive (respeita parágrafo/sentença antes de cortar por tamanho).
+    """
+    if source and source.lower().endswith(".csv"):
+        return [line.strip() for line in text.splitlines() if line.strip()]
+    return _chunk_recursive(text, chunk_size)
 
 def _chunk_fixed(text: str, chunk_size: int, overlap: int) -> list[str]:
     chunks = []

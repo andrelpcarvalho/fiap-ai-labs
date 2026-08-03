@@ -36,6 +36,8 @@ DEFAULT_INPUTS = [
     repo_root / "data" / "lab" / "lab_emprestimo.txt",
 ]
 
+STRATEGIES = ("fixed", "by_paragraph", "by_sentence", "recursive", "by_tokens", "by_source")
+
 
 def _ends_mid_sentence(chunk: str) -> bool:
     """Heurística: chunk não termina em pontuação de fim de frase."""
@@ -89,7 +91,7 @@ def run_one(
     all_chunks: list[str] = []
     print(f"\n=== strategy={strategy}  size={size}  overlap={overlap} ===")
     for source, text in docs:
-        chunks = chunk_text(text, chunk_size=size, overlap=overlap, strategy=strategy)
+        chunks = chunk_text(text, chunk_size=size, overlap=overlap, strategy=strategy, source=source)
         stats = analyze_chunks(chunks)
         print(
             f"  [{source}] n={stats['n']:3d}  "
@@ -118,9 +120,9 @@ def run_compare(docs: list[tuple[str, str]], sizes: list[int], overlap: int) -> 
         for size in sizes:
             ov = overlap if strategy in ("fixed", "by_tokens") else 0
             all_chunks: list[str] = []
-            for _, text in docs:
+            for source, text in docs:
                 all_chunks.extend(
-                    chunk_text(text, chunk_size=size, overlap=ov, strategy=strategy)
+                    chunk_text(text, chunk_size=size, overlap=overlap, strategy=strategy, source=source)
                 )
             s = analyze_chunks(all_chunks)
             print(
