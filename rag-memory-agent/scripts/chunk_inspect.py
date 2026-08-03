@@ -29,7 +29,6 @@ if str(repo_root) not in sys.path:
 from src.indexing.chunking import chunk_text
 from src.indexing.loaders import load_documents_from_file
 
-STRATEGIES = ("fixed", "by_paragraph", "by_sentence", "recursive", "by_tokens")
 DEFAULT_INPUTS = [
     repo_root / "data" / "lab" / "lab_conta_premium.pdf",
     repo_root / "data" / "lab" / "lab_tarifas.csv",
