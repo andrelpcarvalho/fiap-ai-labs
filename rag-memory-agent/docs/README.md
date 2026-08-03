@@ -8,11 +8,14 @@ Material organizado em **3 aulas** (arco sugerido no roteiro da Aula 1), além d
 
 | # | Arquivo | Conteúdo | Duração |
 |---|---------|----------|---------|
+| 0 | [00-setup-pre-aula.md](aula-01-chunking-e-embeddings/00-setup-pre-aula.md) | **Setup pré-aula** (fazer em casa): instalação e pré-download do modelo | 15–30 min |
 | 1 | [01-roteiro.md](aula-01-chunking-e-embeddings/01-roteiro.md) | Roteiro da aula (blocos A/B/C, checklist do instrutor) | — |
 | 2 | [02-lab-rag-chromadb-1h.md](aula-01-chunking-e-embeddings/02-lab-rag-chromadb-1h.md) | Lab guiado: ciclo RAG completo com ChromaDB local (antes/depois da indexação) | 1h |
 | 3 | [03-lab1-anatomia-chunking.md](aula-01-chunking-e-embeddings/03-lab1-anatomia-chunking.md) | Lab 1: estratégias de chunking, chunk_size e overlap | 45–60 min |
 | 4 | [04-lab2-chunking-retrieval.md](aula-01-chunking-e-embeddings/04-lab2-chunking-retrieval.md) | Lab 2: impacto do chunking na qualidade do retrieval (hit rate@k) | 50–60 min |
 | 5 | [05-lab3-chunker-por-tokens.md](aula-01-chunking-e-embeddings/05-lab3-chunker-por-tokens.md) | Lab 3: implementar chunker `by_tokens` com tiktoken (solução em `solucoes/`) | 50–60 min |
+
+> O setup e cada lab da Aula 1 existem em **duas versões** — [`bash/`](aula-01-chunking-e-embeddings/bash/) (Linux, macOS, Git Bash) e [`powershell/`](aula-01-chunking-e-embeddings/powershell/) (Windows) — que diferem apenas nos comandos de terminal. Os links acima levam à página de escolha.
 
 ## Aula 2 — Retrieval, Memória de Longo Prazo e Vector Search
 

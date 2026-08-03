@@ -9,24 +9,28 @@ Projeto didático para ensino de **RAG** (Retrieval-Augmented Generation) e agen
 | Item | Obrigatório? | Notas |
 |------|--------------|--------|
 | Git | Sim | Para clonar o repositório |
-| Python **3.11+** | Sim | `python --version` |
-| Rede (1ª vez) | Sim | Download do modelo de embedding local (~90 MB) |
+| Python **3.11 ou 3.12** | Sim | `python --version` (evite 3.13+: dependências pinadas podem exigir compilação) |
+| Rede (1ª vez) | Sim | Instalação (>1 GB) + modelo de embedding local (~470 MB) — **faça em casa, antes da aula** |
 | Docker | **Não** | Opcional; só para rodar o agente containerizado |
 | Conta GCP / Vertex AI | **Não** | Opcional; default usa embeddings locais |
 | API Key Google AI | Só se for rodar o **agente** conversacional | Labs de chunking/RAG funcionam sem |
 
+> **Alunos:** sigam o [setup pré-aula](docs/aula-01-chunking-e-embeddings/00-setup-pre-aula.md), que tem versão **bash** (Linux/macOS/Git Bash) e **PowerShell** (Windows) com todos os passos e o pré-download do modelo.
+
 ## Instalação rápida (labs de RAG)
 
 ```bash
-git clone <url-do-repo> agente-3-the-memory
-cd agente-3-the-memory
+git clone <url-do-repo> agent-the-memory
+cd agent-the-memory
 git checkout rag-turma-2
 
 python -m venv venv
-# Windows:
-venv\Scripts\activate
+# Windows (PowerShell):
+#   .\venv\Scripts\Activate.ps1
+# Windows (Git Bash):
+#   source venv/Scripts/activate
 # Linux/macOS:
-# source venv/bin/activate
+#   source venv/bin/activate
 
 pip install -e ".[lab]"
 ```
@@ -82,6 +86,8 @@ python scripts/rag_query.py "Quais são as tarifas da conta premium e as condiç
 | 1 | Anatomia do chunking (estratégias, size, overlap) | [docs/aula-01-chunking-e-embeddings/03-lab1-anatomia-chunking.md](docs/aula-01-chunking-e-embeddings/03-lab1-anatomia-chunking.md) |
 | 2 | Chunking × qualidade de retrieval (hit rate@k) | [docs/aula-01-chunking-e-embeddings/04-lab2-chunking-retrieval.md](docs/aula-01-chunking-e-embeddings/04-lab2-chunking-retrieval.md) |
 | 3 | Chunker próprio `by_tokens` (tiktoken) | [docs/aula-01-chunking-e-embeddings/05-lab3-chunker-por-tokens.md](docs/aula-01-chunking-e-embeddings/05-lab3-chunker-por-tokens.md) |
+
+Cada lab tem versão **bash** e **PowerShell** (os links levam à página de escolha).
 
 Roteiro da aula: [docs/aula-01-chunking-e-embeddings/01-roteiro.md](docs/aula-01-chunking-e-embeddings/01-roteiro.md)
 

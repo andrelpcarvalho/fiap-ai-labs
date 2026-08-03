@@ -138,7 +138,7 @@ def _embed_local(texts: list[str], *, model: str, for_query: bool = False) -> li
     from sentence_transformers import SentenceTransformer
 
     if model not in _local_model_cache:
-        logger.info("Carregando modelo local de embedding: %s (primeiro uso pode baixar ~90MB)", model)
+        logger.info("Carregando modelo local de embedding: %s (primeiro uso pode baixar ~470MB)", model)
         _local_model_cache[model] = SentenceTransformer(model)
     encoder: SentenceTransformer = _local_model_cache[model]  # type: ignore[assignment]
     # sentence-transformers trata query/doc de forma similar para MiniLM; normalize para cosine

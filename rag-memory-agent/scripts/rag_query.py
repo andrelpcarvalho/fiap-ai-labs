@@ -23,6 +23,11 @@ except ImportError:
 import os
 os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
 
+# Consoles Windows (cp1252/cp850) podem quebrar ao imprimir o contexto; força UTF-8 com fallback.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 

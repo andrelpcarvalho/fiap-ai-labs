@@ -14,31 +14,32 @@
   {
     "id": "q03",
     "question": "Após quantas recusas de taxa o handoff é obrigatório?",
-    "must_contain": ["3"],
+    "must_contain": ["3 recusas"],
     "source_hint": "lab_emprestimo.txt"
   },
   {
     "id": "q04",
     "question": "Qual o valor da segunda via do cartão?",
-    "must_contain": ["35"],
+    "must_contain": ["R$ 35"],
     "source_hint": "lab_tarifas.csv"
   },
   {
     "id": "q05",
     "question": "Quantos TEDs gratuitos a conta premium tem por mês?",
-    "must_contain": ["5"],
-    "source_hint": "lab_tarifas.csv"
+    "must_contain": ["5 por mês", "5 gratuitos"],
+    "source_hint": "lab_tarifas.csv",
+    "must_contain_any": true
   },
   {
     "id": "q06",
     "question": "Quanto custa um TED após o limite gratuito na conta premium?",
-    "must_contain": ["15"],
+    "must_contain": ["R$ 15"],
     "source_hint": "lab_tarifas.csv"
   },
   {
     "id": "q07",
     "question": "Qual o valor do saque em rede 24h para conta premium?",
-    "must_contain": ["10"],
+    "must_contain": ["R$ 10,00"],
     "source_hint": "lab_tarifas.csv"
   },
   {

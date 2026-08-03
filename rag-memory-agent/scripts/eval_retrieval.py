@@ -14,11 +14,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
+
+# Evita warnings de telemetria do Chroma durante o lab
+os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
+
+# Consoles Windows (cp1252/cp850) podem quebrar ao imprimir previews; força UTF-8 com fallback.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
 
 repo_root = Path(__file__).resolve().parent.parent
 if str(repo_root) not in sys.path:

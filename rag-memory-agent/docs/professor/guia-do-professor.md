@@ -162,8 +162,8 @@ sequenceDiagram
 ### Comandos (copiáveis)
 
 ```bash
-# 1. Entrar no diretório do projeto
-cd agente-3-the-memory
+# 1. Entrar no diretório do projeto (raiz do repositório)
+cd agent-the-memory
 
 # 2. Criar e ativar ambiente virtual
 python -m venv venv

@@ -567,7 +567,7 @@ O projeto inclui três módulos de teste que validam FSM, Session Gateway e Memo
 ### Instalação
 
 ```bash
-cd agente-3-the-memory
+cd agent-the-memory
 python -m venv venv
 # Windows
 venv\Scripts\activate

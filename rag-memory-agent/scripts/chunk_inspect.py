@@ -17,6 +17,11 @@ import statistics
 import sys
 from pathlib import Path
 
+# Consoles Windows (cp1252/cp850) não representam "✂"/"✓"; força UTF-8 com fallback.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+
 repo_root = Path(__file__).resolve().parent.parent
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))

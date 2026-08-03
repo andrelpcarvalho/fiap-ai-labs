@@ -7,22 +7,14 @@
 ## Antes da aula (instrutor)
 
 - [ ] Repo publicado na branch `rag-turma-2`
+- [ ] **Enviar o [setup pré-aula](00-setup-pre-aula.md) para a turma com antecedência** — instalação (>1 GB) e modelo de embedding (~470 MB) devem ser baixados em casa, não no Wi-Fi da sala
 - [ ] Validar em pasta limpa: clone → `pip install -e ".[lab]"` → lab 1h → Labs 1–2
 - [ ] Abrir teoria: `rag.html` ou `rag_II.html` + `index.html`
-- [ ] Garantir que `data/chroma` **não** vem populado no clone (só `.gitkeep`)
-- [ ] Avisar: 1ª execução baixa ~90 MB do modelo de embedding (rede)
+- [ ] Garantir que `data/chroma`, `out/` e o PDF do lab **não** vêm populados no clone (são gerados; estão no `.gitignore`)
 
-## Clone com a turma
+## Setup com a turma
 
-```bash
-git clone <url> agente-3-the-memory-turma2
-cd agente-3-the-memory-turma2
-git checkout rag-turma-2
-python -m venv venv
-# ativar venv
-pip install -e ".[lab]"
-python scripts/generate_lab_pdf.py
-```
+Cada aluno segue o [setup pré-aula](00-setup-pre-aula.md) na versão do seu shell ([bash](bash/00-setup-pre-aula.md) para Linux/macOS/Git Bash, [PowerShell](powershell/00-setup-pre-aula.md) para Windows). Quem fez em casa só precisa ativar o venv e rodar `python scripts/generate_lab_pdf.py`.
 
 **Não** pedir Docker nem GCP neste dia.
 
@@ -61,8 +53,10 @@ Ordem sugerida (observar → medir → construir):
 | Ordem | Lab | Tempo | Entrega |
 |-------|-----|-------|---------|
 | 1 | [Anatomia do Chunking](03-lab1-anatomia-chunking.md) | 45–60 min | Tabela `--compare` + discussão |
-| 2 | [Chunking × Retrieval](04-lab2-chunking-retrieval.md) | 50–60 min | `hit rate@k` nas 3 configs |
+| 2 | [Chunking × Retrieval](04-lab2-chunking-retrieval.md) | 50–60 min | `hit rate@k` nas 4 configs |
 | 3 | [Chunker by_tokens](05-lab3-chunker-por-tokens.md) | 50–60 min | pytest verde + eval |
+
+> Cada lab tem versão **bash** (Linux/macOS/Git Bash) e **PowerShell** (Windows) — os links acima levam à página de escolha. Cada aluno segue **uma** versão do início ao fim.
 
 ### Se o tempo apertar no mesmo dia
 
