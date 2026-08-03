@@ -61,5 +61,15 @@
     "question": "Qual a margem máxima de desconto na taxa para cliente premium?",
     "must_contain": ["0,3"],
     "source_hint": "lab_emprestimo.txt"
+  },
+  {
+    "id": "q11",
+    "question": "Depois de quantos TEDs gratuitos por mes a conta premium passa a cobrar R$ 15,00?",
+    "must_contain": ["5 por mês"]
+  },
+  {
+    "id": "q12",
+    "question": "Qual a diferenca em pontos percentuais entre a taxa minima do emprestimo pessoal para cliente premium e para cliente standard?",
+    "must_contain": ["0,85"]
   }
 ]

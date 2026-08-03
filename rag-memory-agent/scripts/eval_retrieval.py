@@ -57,8 +57,9 @@ class ChunkConfig:
 DEFAULT_CONFIGS = [
     ChunkConfig("fixed_128_o0", "fixed", 128, 0),
     ChunkConfig("fixed_512_o64", "fixed", 512, 64),
-    ChunkConfig("recursive_512", "recursive", 512, 0),
+    ChunkConfig("recursive_512", "recursive", 512, 64),
     ChunkConfig("by_tokens_128", "by_tokens", 128, 16),
+    ChunkConfig("by_tokens_256", "by_tokens", 256, 16),
 ]
 
 
