@@ -1,0 +1,2257 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Embeddings do Zero — Uma jornada didática</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #070b14;
+        color: #f8fafc;
+      }
+      .font-mono {
+        font-family: "JetBrains Mono", monospace;
+      }
+      .gradient-text {
+        background: linear-gradient(100deg, #f8fafc 10%, #60a5fa 55%, #34d399);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        border: 1px solid #334155;
+        color: #94a3b8;
+        background: #0f172a;
+      }
+      .pill-accent {
+        border-color: rgba(59, 130, 246, 0.4);
+        color: #93c5fd;
+        background: rgba(59, 130, 246, 0.1);
+      }
+      .pill-emerald {
+        border-color: rgba(52, 211, 153, 0.4);
+        color: #6ee7b7;
+        background: rgba(52, 211, 153, 0.1);
+      }
+      .pill-amber {
+        border-color: rgba(245, 158, 11, 0.4);
+        color: #fcd34d;
+        background: rgba(245, 158, 11, 0.1);
+      }
+      .pill-rose {
+        border-color: rgba(244, 63, 94, 0.4);
+        color: #fda4af;
+        background: rgba(244, 63, 94, 0.1);
+      }
+      .card-hover {
+        transition:
+          transform 0.25s ease,
+          border-color 0.25s ease,
+          box-shadow 0.25s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-3px);
+        border-color: #475569;
+        box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.7);
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .fade-up {
+        animation: fadeUp 0.4s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+      }
+      .custom-scroll::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scroll::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scroll::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 4px;
+      }
+      .nav-link {
+        transition: all 0.15s ease;
+      }
+      .nav-link.active {
+        background: rgba(59, 130, 246, 0.15);
+        color: #93c5fd;
+        border-color: rgba(59, 130, 246, 0.4);
+      }
+      .story {
+        background:
+          radial-gradient(
+            120% 100% at 0% 0%,
+            rgba(245, 158, 11, 0.07),
+            transparent 60%
+          ),
+          #0b1220;
+        border: 1px solid #1f2937;
+        border-left: 3px solid #f59e0b;
+      }
+      .story-punch {
+        border-left: 2px solid #f59e0b;
+        background: rgba(245, 158, 11, 0.08);
+        color: #fde68a;
+      }
+      .kbd {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.7rem;
+        border: 1px solid #334155;
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        padding: 0.05rem 0.3rem;
+        color: #cbd5e1;
+        background: #0f172a;
+      }
+      .highlight-hit {
+        background: rgba(52, 211, 153, 0.35);
+        color: #ecfdf5;
+        border-radius: 3px;
+        padding: 0 2px;
+      }
+      .highlight-miss {
+        background: rgba(244, 63, 94, 0.25);
+        color: #fecdd3;
+        border-radius: 3px;
+        padding: 0 2px;
+      }
+      input[type="range"] {
+        accent-color: #3b82f6;
+      }
+      .quiz-btn.correct {
+        border-color: #34d399 !important;
+        background: rgba(52, 211, 153, 0.15) !important;
+      }
+      .quiz-btn.wrong {
+        border-color: #f43f5e !important;
+        background: rgba(244, 63, 94, 0.15) !important;
+      }
+      canvas.interactive {
+        cursor: crosshair;
+        touch-action: none;
+      }
+      .seg-btn {
+        transition: all 0.18s ease;
+      }
+      .seg-btn.active {
+        background: #1e293b;
+        color: #f8fafc;
+        box-shadow: 0 0 0 1px #475569;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <!-- Top bar -->
+    <header
+      class="sticky top-0 z-50 border-b border-slate-800 bg-[#070b14]/90 backdrop-blur-md"
+    >
+      <div
+        class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-emerald-400 text-sm font-bold text-slate-900"
+          >
+            E
+          </div>
+          <div>
+            <div class="text-sm font-semibold tracking-tight">
+              Embeddings do Zero
+            </div>
+            <div class="text-[11px] text-slate-500">
+              Para leigos, curiosos e crianças curiosas
+            </div>
+          </div>
+        </div>
+        <a
+          href="rag_agentic.html#embeddings"
+          class="hidden text-xs text-slate-400 transition hover:text-blue-300 sm:inline"
+          >Versão avançada →</a
+        >
+        <button
+          id="menuToggle"
+          class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300 lg:hidden"
+        >
+          Capítulos
+        </button>
+      </div>
+    </header>
+
+    <div class="mx-auto flex max-w-7xl gap-8 px-4 py-8">
+      <!-- Sidebar nav -->
+      <aside
+        id="sidebar"
+        class="custom-scroll fixed inset-y-0 left-0 z-40 w-72 -translate-x-full overflow-y-auto border-r border-slate-800 bg-[#070b14] p-5 pt-20 transition-transform lg:sticky lg:top-20 lg:z-0 lg:h-[calc(100vh-6rem)] lg:w-56 lg:translate-x-0 lg:border-0 lg:bg-transparent lg:p-0 lg:pt-0"
+      >
+        <div class="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+          A jornada
+        </div>
+        <nav class="flex flex-col gap-1 text-sm" id="chapterNav"></nav>
+        <div class="mt-6 rounded-xl border border-slate-800 bg-slate-900/50 p-3 text-xs text-slate-400">
+          Dica: cada capítulo tem um
+          <span class="text-emerald-300">brinquedo</span> pra você mexer.
+          Mexa. É assim que a ideia gruda.
+        </div>
+      </aside>
+      <div
+        id="sidebarOverlay"
+        class="fixed inset-0 z-30 hidden bg-black/60 lg:hidden"
+      ></div>
+
+      <!-- Main content -->
+      <main class="min-w-0 flex-1 space-y-16 pb-24">
+        <!-- Hero -->
+        <section class="fade-up space-y-5">
+          <span class="pill pill-accent">Jornada interativa</span>
+          <h1 class="text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
+            O que é um
+            <span class="gradient-text">embedding</span>?
+          </h1>
+          <p class="max-w-2xl text-lg text-slate-300">
+            Imagine que palavras fossem casas numa cidade enorme. Casas parecidas
+            moram no mesmo bairro. Um embedding é o
+            <b class="text-white">endereço secreto</b> de cada casa — um conjunto
+            de números que o computador usa para achar vizinhos.
+          </p>
+          <p class="max-w-2xl text-slate-400">
+            Nesta página você vai
+            <b class="text-slate-200">construir</b>,
+            <b class="text-slate-200">medir</b> e
+            <b class="text-slate-200">buscar</b> embeddings com as próprias mãos.
+            Sem jargão antes da analogia. Sem magia preta.
+          </p>
+          <div class="flex flex-wrap gap-2 pt-2">
+            <a
+              href="#cap1"
+              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
+              >Começar a jornada →</a
+            >
+            <a
+              href="indices_e_vector_stores.html"
+              class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-500"
+              >Ir para índices e Vector Stores</a
+            >
+          </div>
+        </section>
+
+        <!-- ========== CAP 1 ========== -->
+        <section id="cap1" class="scroll-mt-24 space-y-6">
+          <div class="flex items-center gap-3">
+            <span class="pill">Capítulo 1</span>
+            <span class="pill pill-rose">O problema</span>
+          </div>
+          <h2 class="text-2xl font-bold sm:text-3xl">
+            Computadores não entendem palavras
+          </h2>
+          <div class="story rounded-xl p-5 space-y-3">
+            <p>
+              Você abre um texto e aperta <span class="kbd">Ctrl</span>+<span class="kbd">F</span>
+              para achar a palavra <b class="text-amber-200">“cão”</b>. Mas o texto
+              só escreveu <b class="text-amber-200">“cachorro”</b>. O computador
+              responde: “não achei”. Ele é literal. Para ele,
+              <i>cão</i> e <i>cachorro</i> são tão diferentes quanto
+              <i>cão</i> e <i>helicóptero</i>.
+            </p>
+            <div class="story-punch mt-3 rounded-r-lg px-4 py-3 text-sm">
+              O computador lê letras. Humanos leem significado. Embeddings
+              existem para ensinar significado ao computador.
+            </div>
+          </div>
+
+          <div
+            class="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-4"
+          >
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <h3 class="font-semibold text-slate-100">
+                Brinquedo: busca literal (Ctrl+F)
+              </h3>
+              <span class="pill pill-amber">mexa aqui</span>
+            </div>
+            <p class="text-sm text-slate-400">
+              Digite uma palavra e veja o que o computador encontra
+              <b>exatamente</b>. Tente “cão”, depois “cachorro”, depois “animal”.
+            </p>
+            <div
+              id="literalText"
+              class="rounded-xl border border-slate-700 bg-[#0b1220] p-4 text-sm leading-relaxed text-slate-300 font-mono"
+            >
+              Meu cachorro late para o carteiro toda manhã. O animal é dócil com
+              as crianças, mas late mesmo. Ontem ele viu um gato no quintal e
+              correu atrás. Eu amo esse pet — ele é minha família de quatro
+              patas.
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <input
+                id="literalQuery"
+                type="text"
+                placeholder="Digite uma palavra…"
+                value="cão"
+                class="flex-1 min-w-[180px] rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm outline-none focus:border-blue-500"
+              />
+              <button
+                id="literalSearchBtn"
+                class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold hover:bg-blue-500"
+              >
+                Buscar
+              </button>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button
+                class="literal-chip rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-blue-500"
+                data-q="cão"
+              >
+                cão
+              </button>
+              <button
+                class="literal-chip rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-blue-500"
+                data-q="cachorro"
+              >
+                cachorro
+              </button>
+              <button
+                class="literal-chip rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-blue-500"
+                data-q="animal"
+              >
+                animal
+              </button>
+              <button
+                class="literal-chip rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-blue-500"
+                data-q="pet"
+              >
+                pet
+              </button>
+              <button
+                class="literal-chip rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-blue-500"
+                data-q="helicóptero"
+              >
+                helicóptero
+              </button>
+            </div>
+            <div
+              id="literalResult"
+              class="rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-3 text-sm"
+            ></div>
+          </div>
+        </section>
+
+        <!-- ========== CAP 2 ========== -->
+        <section id="cap2" class="scroll-mt-24 space-y-6">
+          <div class="flex items-center gap-3">
+            <span class="pill">Capítulo 2</span>
+            <span class="pill pill-accent">A grande ideia</span>
+          </div>
+          <h2 class="text-2xl font-bold sm:text-3xl">
+            Dar um endereço a cada palavra
+          </h2>
+          <p class="text-slate-300 max-w-2xl">
+            Imagine uma cidade onde palavras moram. Palavras parecidas moram no
+            mesmo bairro. “Cachorro” mora perto de “gato” e “animal”. “Pizza”
+            mora perto de “hambúrguer”. “Triste” mora perto de “chorar”.
+          </p>
+          <p class="text-slate-400 max-w-2xl">
+            O <b class="text-white">endereço</b> de cada palavra é uma lista de
+            números — as coordenadas no mapa. Isso se chama
+            <b class="text-emerald-300">embedding</b>
+            (do inglês <i>to embed</i> = encaixar, embutir).
+          </p>
+
+          <div
+            class="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-4"
+          >
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <h3 class="font-semibold">
+                Brinquedo: mapa das palavras
+              </h3>
+              <span class="pill pill-amber">clique numa palavra</span>
+            </div>
+            <p class="text-sm text-slate-400">
+              Clique em qualquer bolinha. Vamos marcar os 3 vizinhos mais
+              próximos e mostrar a distância. Perceba: palavras do mesmo bairro
+              estão juntas.
+            </p>
+            <div class="relative">
+              <canvas
+                id="wordMap"
+                class="interactive w-full rounded-xl border border-slate-700 bg-[#0b1220]"
+                height="420"
+              ></canvas>
+              <div
+                id="wordMapLegend"
+                class="mt-3 flex flex-wrap gap-2 text-xs"
+              ></div>
+            </div>
+            <div
+              id="wordMapInfo"
+              class="rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-3 text-sm text-slate-300"
+            >
+              Clique numa palavra para ver os vizinhos…
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== CAP 3 ========== -->
+        <section id="cap3" class="scroll-mt-24 space-y-6">
+          <div class="flex items-center gap-3">
+            <span class="pill">Capítulo 3</span>
+            <span class="pill pill-emerald">Construindo</span>
+          </div>
+          <h2 class="text-2xl font-bold sm:text-3xl">
+            Faça um embedding com as próprias mãos
+          </h2>
+          <p class="text-slate-300 max-w-2xl">
+            Em vez de deixar o computador inventar as dimensões, vamos inventar
+            quatro perguntas humanas. Cada pergunta vira um número de 0 a 10.
+            Juntas, formam o endereço (o vetor) da coisa.
+          </p>
+
+          <div
+            class="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-5"
+          >
+            <div class="flex flex-wrap gap-2">
+              <button
+                class="thing-btn seg-btn active rounded-lg border border-slate-700 px-3 py-1.5 text-sm"
+                data-thing="leão"
+              >
+                🦁 Leão
+              </button>
+              <button
+                class="thing-btn seg-btn rounded-lg border border-slate-700 px-3 py-1.5 text-sm"
+                data-thing="morango"
+              >
+                🍓 Morango
+              </button>
+              <button
+                class="thing-btn seg-btn rounded-lg border border-slate-700 px-3 py-1.5 text-sm"
+                data-thing="trator"
+              >
+                🚜 Trator
+              </button>
+              <button
+                class="thing-btn seg-btn rounded-lg border border-slate-700 px-3 py-1.5 text-sm"
+                data-thing="custom"
+              >
+                ✏️ Sua coisa
+              </button>
+            </div>
+
+            <div id="customNameWrap" class="hidden">
+              <input
+                id="customName"
+                type="text"
+                placeholder="Nome da sua coisa…"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div class="space-y-4">
+                <label class="block text-sm">
+                  <div class="mb-1 flex justify-between text-slate-300">
+                    <span>É vivo?</span>
+                    <span id="dimVivoVal" class="font-mono text-blue-300">5</span>
+                  </div>
+                  <input
+                    id="dimVivo"
+                    type="range"
+                    min="0"
+                    max="10"
+                    value="9"
+                    class="w-full"
+                  />
+                </label>
+                <label class="block text-sm">
+                  <div class="mb-1 flex justify-between text-slate-300">
+                    <span>É grande?</span>
+                    <span id="dimGrandeVal" class="font-mono text-blue-300"
+                      >5</span
+                    >
+                  </div>
+                  <input
+                    id="dimGrande"
+                    type="range"
+                    min="0"
+                    max="10"
+                    value="8"
+                    class="w-full"
+                  />
+                </label>
+                <label class="block text-sm">
+                  <div class="mb-1 flex justify-between text-slate-300">
+                    <span>Dá pra comer?</span>
+                    <span id="dimComerVal" class="font-mono text-blue-300"
+                      >5</span
+                    >
+                  </div>
+                  <input
+                    id="dimComer"
+                    type="range"
+                    min="0"
+                    max="10"
+                    value="1"
+                    class="w-full"
+                  />
+                </label>
+                <label class="block text-sm">
+                  <div class="mb-1 flex justify-between text-slate-300">
+                    <span>É perigoso?</span>
+                    <span id="dimPerigoVal" class="font-mono text-blue-300"
+                      >5</span
+                    >
+                  </div>
+                  <input
+                    id="dimPerigo"
+                    type="range"
+                    min="0"
+                    max="10"
+                    value="9"
+                    class="w-full"
+                  />
+                </label>
+              </div>
+              <div class="space-y-3">
+                <canvas
+                  id="handEmbedCanvas"
+                  class="w-full rounded-xl border border-slate-700 bg-[#0b1220]"
+                  height="260"
+                ></canvas>
+                <div
+                  id="handEmbedVector"
+                  class="rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 font-mono text-xs text-emerald-300"
+                ></div>
+                <div
+                  id="handEmbedNearest"
+                  class="text-sm text-slate-400"
+                ></div>
+              </div>
+            </div>
+
+            <div class="story-punch rounded-r-lg px-4 py-3 text-sm">
+              Modelos reais fazem a mesma coisa — só que com
+              <b>384, 768 ou 1536 perguntas secretas</b>, aprendidas
+              automaticamente a partir de bilhões de textos. Ninguém escolhe as
+              perguntas à mão. O resultado é um endereço muito mais rico.
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== CAP 4 ========== -->
+        <section id="cap4" class="scroll-mt-24 space-y-6">
+          <div class="flex items-center gap-3">
+            <span class="pill">Capítulo 4</span>
+            <span class="pill pill-accent">Medindo</span>
+          </div>
+          <h2 class="text-2xl font-bold sm:text-3xl">
+            Como medir “parecença”?
+          </h2>
+          <p class="text-slate-300 max-w-2xl">
+            Dois amigos apontam com o braço. Se apontam para o
+            <b class="text-white">mesmo lado</b>, estão alinhados. Se apontam para
+            lados opostos, discordam. Em embeddings, medimos o
+            <b class="text-emerald-300">ângulo</b> entre dois endereços. O nome
+            técnico dessa medida é
+            <b class="text-emerald-300">similaridade de cosseno</b>.
+          </p>
+
+          <!-- Fórmula explicada -->
+          <div
+            class="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-5"
+          >
+            <h3 class="font-semibold text-slate-100">
+              A fórmula — pedaço por pedaço
+            </h3>
+            <div
+              class="rounded-xl border border-blue-900/40 bg-blue-950/20 px-4 py-5 text-center"
+            >
+              <div class="font-mono text-lg text-blue-200 sm:text-2xl tracking-wide">
+                cos(θ) = (A · B) / (|A| × |B|)
+              </div>
+              <div class="mt-2 text-xs text-slate-500">
+                “Cosseno do ângulo entre A e B = produto escalar dividido pelos
+                comprimentos”
+              </div>
+            </div>
+
+            <div class="grid gap-3 md:grid-cols-3">
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-950/50 p-4 space-y-2"
+              >
+                <div class="font-mono text-sm text-blue-300">A · B</div>
+                <div class="text-xs font-semibold text-slate-200">
+                  Produto escalar (dot product)
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                  Multiplique número com número na mesma posição e some tudo.
+                  Ex.: A=(3, 4) e B=(1, 2) →
+                  <span class="font-mono text-slate-300"
+                    >3×1 + 4×2 = 11</span
+                  >. Quanto mais “apontam juntos”, maior o resultado.
+                </p>
+              </div>
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-950/50 p-4 space-y-2"
+              >
+                <div class="font-mono text-sm text-emerald-300">|A| e |B|</div>
+                <div class="text-xs font-semibold text-slate-200">
+                  Comprimento (norma)
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                  É o tamanho da seta:
+                  <span class="font-mono text-slate-300"
+                    >|A| = √(3² + 4²) = 5</span
+                  >. Dividimos pelos comprimentos para
+                  <b class="text-slate-300">ignorar o tamanho</b> e olhar só a
+                  direção — textos longos não “ganham” só por serem longos.
+                </p>
+              </div>
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-950/50 p-4 space-y-2"
+              >
+                <div class="font-mono text-sm text-amber-300">cos(θ)</div>
+                <div class="text-xs font-semibold text-slate-200">
+                  O resultado final
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                  Sai um número entre <b class="text-slate-300">−1 e +1</b>.
+                  Perto de <b class="text-emerald-300">+1</b> = mesma direção
+                  (parecidos). Perto de <b class="text-slate-300">0</b> =
+                  perpendiculares (sem relação). Perto de
+                  <b class="text-rose-300">−1</b> = opostos.
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="rounded-xl border border-slate-800 bg-slate-950/40 p-4 space-y-3"
+            >
+              <div class="text-sm font-semibold text-slate-200">
+                Exemplo completo com números de verdade
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-400">
+                  <thead>
+                    <tr class="border-b border-slate-800 text-slate-500">
+                      <th class="py-2 pr-3 font-medium">Passo</th>
+                      <th class="py-2 font-medium">Conta</th>
+                    </tr>
+                  </thead>
+                  <tbody class="font-mono">
+                    <tr class="border-b border-slate-800/60">
+                      <td class="py-2 pr-3 text-slate-300">1. Vetores</td>
+                      <td class="py-2">
+                        A = (3, 4)&nbsp;&nbsp; B = (4, 3)
+                      </td>
+                    </tr>
+                    <tr class="border-b border-slate-800/60">
+                      <td class="py-2 pr-3 text-slate-300">2. A · B</td>
+                      <td class="py-2">
+                        3×4 + 4×3 = 12 + 12 =
+                        <span class="text-blue-300">24</span>
+                      </td>
+                    </tr>
+                    <tr class="border-b border-slate-800/60">
+                      <td class="py-2 pr-3 text-slate-300">3. |A|</td>
+                      <td class="py-2">
+                        √(3²+4²) = √25 =
+                        <span class="text-emerald-300">5</span>
+                      </td>
+                    </tr>
+                    <tr class="border-b border-slate-800/60">
+                      <td class="py-2 pr-3 text-slate-300">4. |B|</td>
+                      <td class="py-2">
+                        √(4²+3²) = √25 =
+                        <span class="text-emerald-300">5</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 pr-3 text-slate-300">5. cos</td>
+                      <td class="py-2">
+                        24 / (5×5) = 24/25 =
+                        <span class="text-amber-300">0,96</span>
+                        → quase iguais!
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="text-xs text-slate-500 leading-relaxed">
+                Por que não usamos só a distância euclidiana (régua no mapa)?
+                Porque dois textos sobre o mesmo assunto podem ter vetores de
+                tamanhos diferentes. O cosseno pergunta:
+                <i>“apontam para o mesmo lado?”</i> — e isso é o que importa
+                para significado.
+              </p>
+            </div>
+
+            <div class="grid gap-2 sm:grid-cols-3 text-center text-xs">
+              <div
+                class="rounded-lg border border-emerald-900/40 bg-emerald-950/20 px-3 py-3"
+              >
+                <div class="font-mono text-lg text-emerald-300">≈ 1</div>
+                <div class="mt-1 text-slate-400">
+                  Mesma direção · textos parecidos
+                </div>
+              </div>
+              <div
+                class="rounded-lg border border-slate-700 bg-slate-950/40 px-3 py-3"
+              >
+                <div class="font-mono text-lg text-slate-300">≈ 0</div>
+                <div class="mt-1 text-slate-400">
+                  Ângulo reto · assuntos diferentes
+                </div>
+              </div>
+              <div
+                class="rounded-lg border border-rose-900/40 bg-rose-950/20 px-3 py-3"
+              >
+                <div class="font-mono text-lg text-rose-300">≈ −1</div>
+                <div class="mt-1 text-slate-400">
+                  Direções opostas · (raro em texto)
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-4"
+          >
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <h3 class="font-semibold">Brinquedo: setas arrastáveis</h3>
+              <span class="pill pill-amber">arraste as pontas</span>
+            </div>
+            <p class="text-sm text-slate-400">
+              Arraste as pontas das setas. Observe o ângulo, o cosseno e a conta
+              ao vivo — é a mesma fórmula de cima, recalculada a cada movimento.
+            </p>
+            <canvas
+              id="cosineCanvas"
+              class="interactive w-full rounded-xl border border-slate-700 bg-[#0b1220]"
+              height="360"
+            ></canvas>
+            <div class="grid gap-3 sm:grid-cols-3">
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-950/50 p-3 text-center"
+              >
+                <div class="text-[10px] uppercase tracking-wider text-slate-500">
+                  Ângulo θ
+                </div>
+                <div id="cosAngle" class="mt-1 font-mono text-xl text-blue-300">
+                  0°
+                </div>
+              </div>
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-950/50 p-3 text-center"
+              >
+                <div class="text-[10px] uppercase tracking-wider text-slate-500">
+                  cos(θ)
+                </div>
+                <div id="cosValue" class="mt-1 font-mono text-xl text-emerald-300">
+                  1.00
+                </div>
+              </div>
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-950/50 p-3 text-center"
+              >
+                <div class="text-[10px] uppercase tracking-wider text-slate-500">
+                  Veredito
+                </div>
+                <div id="cosVerdict" class="mt-1 text-lg font-semibold text-emerald-300">
+                  Quase iguais
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="rounded-xl border border-slate-800 bg-slate-950/40 p-4 text-sm space-y-2"
+            >
+              <div class="font-semibold text-slate-200">
+                Conta ao vivo (mesma fórmula)
+              </div>
+              <div id="cosMath" class="font-mono text-xs text-slate-400 leading-relaxed"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== CAP 5 ========== -->
+        <section id="cap5" class="scroll-mt-24 space-y-6">
+          <div class="flex items-center gap-3">
+            <span class="pill">Capítulo 5</span>
+            <span class="pill pill-emerald">Na prática</span>
+          </div>
+          <h2 class="text-2xl font-bold sm:text-3xl">
+            Um buscador semântico de verdade
+          </h2>
+          <p class="text-slate-300 max-w-2xl">
+            Agora juntamos tudo: cada frase do FAQ ganha um endereço. Sua
+            pergunta também. Achamos as frases com endereço mais perto. Compare
+            lado a lado com a busca antiga (só palavras iguais).
+          </p>
+
+          <div
+            class="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-4"
+          >
+            <div class="flex flex-wrap gap-2">
+              <button
+                class="faq-chip rounded-full border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:border-blue-500"
+                data-q="quando posso cancelar o financiamento?"
+              >
+                quando posso cancelar o financiamento?
+              </button>
+              <button
+                class="faq-chip rounded-full border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:border-blue-500"
+                data-q="meu pet late muito"
+              >
+                meu pet late muito
+              </button>
+              <button
+                class="faq-chip rounded-full border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:border-blue-500"
+                data-q="PROMO-AUTO-2026"
+              >
+                PROMO-AUTO-2026
+              </button>
+              <button
+                class="faq-chip rounded-full border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:border-blue-500"
+                data-q="seguro do carro barato"
+              >
+                seguro do carro barato
+              </button>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <input
+                id="faqQuery"
+                type="text"
+                value="quando posso cancelar o financiamento?"
+                class="flex-1 min-w-[200px] rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm outline-none focus:border-blue-500"
+              />
+              <button
+                id="faqSearchBtn"
+                class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold hover:bg-blue-500"
+              >
+                Buscar
+              </button>
+            </div>
+
+            <div class="grid gap-4 lg:grid-cols-2">
+              <div class="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+                <div class="mb-3 flex items-center gap-2">
+                  <span class="pill pill-rose">Léxico (Ctrl+F)</span>
+                </div>
+                <div id="faqLexical" class="space-y-2 text-sm"></div>
+              </div>
+              <div class="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+                <div class="mb-3 flex items-center gap-2">
+                  <span class="pill pill-emerald">Embedding (semântico)</span>
+                </div>
+                <div id="faqSemantic" class="space-y-2 text-sm"></div>
+              </div>
+            </div>
+
+            <div
+              id="faqLesson"
+              class="story-punch rounded-r-lg px-4 py-3 text-sm"
+            ></div>
+          </div>
+        </section>
+
+        <!-- ========== CAP 6 ========== -->
+        <section id="cap6" class="scroll-mt-24 space-y-6">
+          <div class="flex items-center gap-3">
+            <span class="pill">Capítulo 6</span>
+            <span class="pill pill-accent">Dimensões</span>
+          </div>
+          <h2 class="text-2xl font-bold sm:text-3xl">
+            De 2 para 1536 dimensões
+          </h2>
+          <p class="text-slate-300 max-w-2xl">
+            Até agora usamos mapas chatos (2D) ou 4 perguntas. Modelos reais
+            usam centenas ou milhares de números. Mais dimensões = mais nuances
+            (“é sobre seguro?”, “é jurídico?”, “é vigente?”, “é sobre carro ou
+            sobre crédito?”).
+          </p>
+          <p class="text-slate-400 max-w-2xl">
+            Abaixo: um pedacinho do “espaço” de um banco fictício, projetado em
+            3D. Arraste para girar. A query do cliente fica no meio — e o vizinho
+            amarelo é a armadilha lexical (parece, mas não serve).
+          </p>
+
+          <div
+            class="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-3"
+          >
+            <div
+              id="plot3d"
+              class="w-full rounded-xl border border-slate-700 bg-[#0b1220]"
+              style="height: 460px"
+            ></div>
+            <p class="text-xs text-slate-500">
+              Similaridade semântica ≠ relevância. O blog de 2019 sobre “seguro
+              do carro” fica perto da pergunta sobre seguro prestamista — mas
+              não responde nada útil. Por isso existe o
+              <b class="text-slate-300">reranker</b> (um juiz que lê os dois
+              textos juntos).
+            </p>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-3">
+            <div
+              class="card-hover rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+            >
+              <div class="text-2xl font-bold text-blue-300">384</div>
+              <div class="mt-1 text-sm text-slate-300">dimensões pequenas</div>
+              <div class="mt-2 text-xs text-slate-500">
+                Rápido, barato, bom para começar
+              </div>
+            </div>
+            <div
+              class="card-hover rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+            >
+              <div class="text-2xl font-bold text-emerald-300">768–1536</div>
+              <div class="mt-1 text-sm text-slate-300">padrão de mercado</div>
+              <div class="mt-2 text-xs text-slate-500">
+                Equilíbrio entre qualidade e custo de RAM
+              </div>
+            </div>
+            <div
+              class="card-hover rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+            >
+              <div class="text-2xl font-bold text-violet-300">3072+</div>
+              <div class="mt-1 text-sm text-slate-300">máxima precisão</div>
+              <div class="mt-2 text-xs text-slate-500">
+                Índice pesado — use Matryoshka/quantização
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== CAP 7 ========== -->
+        <section id="cap7" class="scroll-mt-24 space-y-6">
+          <div class="flex items-center gap-3">
+            <span class="pill">Capítulo 7</span>
+            <span class="pill pill-amber">Ponte</span>
+          </div>
+          <h2 class="text-2xl font-bold sm:text-3xl">
+            E quando são milhões de pontos?
+          </h2>
+          <div class="story rounded-xl p-5 space-y-3">
+            <p>
+              Até aqui o embedding criou o <b class="text-amber-200">mapa</b>:
+              cada texto tem um endereço. Comparar a pergunta com 20 frases é
+              fácil. Com <b class="text-amber-200">milhões</b> de vetores,
+              visitar todos é inviável.
+            </p>
+            <p>
+              A solução da indústria é a busca aproximada —
+              <b class="text-white">ANN</b> (Approximate Nearest Neighbor) —
+              e os <b class="text-white">Vector Stores</b> que guardam vetor +
+              documento + metadata.
+            </p>
+            <div class="story-punch mt-3 rounded-r-lg px-4 py-3 text-sm">
+              Índices, ChromaDB e o ecossistema Gemini Enterprise merecem um
+              arquivo próprio: profundidade de referência, sem misturar com a
+              jornada do embedding.
+            </div>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-3 text-xs">
+            <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+              <div class="font-semibold text-rose-300 mb-1">Força bruta</div>
+              Visita todos · recall 100% · só para corpora pequenos
+            </div>
+            <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+              <div class="font-semibold text-amber-300 mb-1">IVF / HNSW / Tree-AH</div>
+              Atalhos (bairros ou grafos) · milissegundos · 95–99% de acerto
+            </div>
+            <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+              <div class="font-semibold text-emerald-300 mb-1">Vector Store</div>
+              Chroma, Vertex AI Vector Search, File Search…
+            </div>
+          </div>
+
+          <a
+            href="indices_e_vector_stores.html"
+            class="card-hover block rounded-2xl border border-amber-900/40 bg-gradient-to-br from-amber-950/40 to-slate-900/50 p-6"
+          >
+            <span class="pill pill-amber">Arquivo dedicado</span>
+            <div class="mt-3 text-xl font-bold">
+              Continuar em Índices e Vector Stores →
+            </div>
+            <p class="mt-2 text-sm text-slate-400 max-w-2xl">
+              Fichas de HNSW, IVF, Tree-AH · brinquedo ANN · ChromaDB completo
+              (arquitetura, HNSW params, pós-filtro) · Gemini Enterprise
+              (File Search, Agent Search, Vertex AI Vector Search, RAG Engine,
+              AlloyDB/BigQuery) · comparativo honesto.
+            </p>
+            <div class="mt-4 text-sm text-amber-300 font-semibold">
+              Abrir indices_e_vector_stores.html
+            </div>
+          </a>
+        </section>
+
+        <!-- cap8 removido: conteúdo profundo migrou para indices_e_vector_stores.html -->
+        <section id="cap8" class="scroll-mt-24 hidden" aria-hidden="true"></section>
+
+        <!-- ========== CAP 9 ========== -->
+        <section id="cap9" class="scroll-mt-24 space-y-6">
+          <div class="flex items-center gap-3">
+            <span class="pill">Capítulo 9</span>
+            <span class="pill pill-emerald">Recap</span>
+          </div>
+          <h2 class="text-2xl font-bold sm:text-3xl">
+            Recapitulando a jornada
+          </h2>
+
+          <div class="relative space-y-0 pl-6 border-l border-slate-700">
+            <div class="relative pb-8">
+              <div
+                class="absolute -left-[25px] top-1 h-3 w-3 rounded-full bg-rose-400"
+              ></div>
+              <div class="text-sm font-semibold text-rose-300">Texto</div>
+              <div class="text-sm text-slate-400">
+                Computador só vê letras. Ctrl+F falha em sinônimos.
+              </div>
+            </div>
+            <div class="relative pb-8">
+              <div
+                class="absolute -left-[25px] top-1 h-3 w-3 rounded-full bg-blue-400"
+              ></div>
+              <div class="text-sm font-semibold text-blue-300">Números</div>
+              <div class="text-sm text-slate-400">
+                Cada texto vira um endereço (vetor) — o embedding.
+              </div>
+            </div>
+            <div class="relative pb-8">
+              <div
+                class="absolute -left-[25px] top-1 h-3 w-3 rounded-full bg-emerald-400"
+              ></div>
+              <div class="text-sm font-semibold text-emerald-300">Mapa</div>
+              <div class="text-sm text-slate-400">
+                Coisas parecidas moram perto. Cosseno mede a parecença.
+              </div>
+            </div>
+            <div class="relative pb-8">
+              <div
+                class="absolute -left-[25px] top-1 h-3 w-3 rounded-full bg-amber-400"
+              ></div>
+              <div class="text-sm font-semibold text-amber-300">Vizinhos</div>
+              <div class="text-sm text-slate-400">
+                Busca semântica = achar endereços próximos da pergunta.
+              </div>
+            </div>
+            <div class="relative">
+              <div
+                class="absolute -left-[25px] top-1 h-3 w-3 rounded-full bg-violet-400"
+              ></div>
+              <div class="text-sm font-semibold text-violet-300">Índice</div>
+              <div class="text-sm text-slate-400">
+                Com milhões de pontos, usamos atalhos (ANN): IVF, HNSW…
+              </div>
+            </div>
+          </div>
+
+          <!-- Quiz -->
+          <div
+            class="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-5"
+          >
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <h3 class="font-semibold">Quiz rápido (5 perguntas)</h3>
+              <span id="quizScore" class="pill pill-accent">0 / 5</span>
+            </div>
+            <div id="quizBox" class="space-y-6"></div>
+          </div>
+
+          <!-- Glossary -->
+          <div>
+            <h3 class="mb-4 text-lg font-semibold">Glossário ilustrado</h3>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+              >
+                <div class="font-semibold text-emerald-300">Embedding</div>
+                <div class="mt-1 text-sm text-slate-400">
+                  O endereço secreto de um texto — uma lista de números que
+                  captura significado.
+                </div>
+              </div>
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+              >
+                <div class="font-semibold text-emerald-300">Vetor</div>
+                <div class="mt-1 text-sm text-slate-400">
+                  A lista de números em si. Em 2D: (x, y). Em 1536D: 1536
+                  números.
+                </div>
+              </div>
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+              >
+                <div class="font-semibold text-emerald-300">Dimensão</div>
+                <div class="mt-1 text-sm text-slate-400">
+                  Uma “pergunta” do endereço. Mais dimensões = mais nuances.
+                </div>
+              </div>
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+              >
+                <div class="font-semibold text-emerald-300">Cosseno</div>
+                <div class="mt-1 text-sm text-slate-400">
+                  Medida de alinhamento entre dois vetores. 1 = mesma direção, 0
+                  = ortogonais, −1 = opostos.
+                </div>
+              </div>
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+              >
+                <div class="font-semibold text-emerald-300">ANN</div>
+                <div class="mt-1 text-sm text-slate-400">
+                  Approximate Nearest Neighbor — busca aproximada do vizinho
+                  mais próximo (família: IVF, HNSW, DiskANN…).
+                </div>
+              </div>
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+              >
+                <div class="font-semibold text-emerald-300">IVF</div>
+                <div class="mt-1 text-sm text-slate-400">
+                  Inverted File Index — divide o espaço em “bairros”
+                  (células) e só visita os mais próximos (<span class="font-mono">nprobe</span>).
+                </div>
+              </div>
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+              >
+                <div class="font-semibold text-emerald-300">PQ</div>
+                <div class="mt-1 text-sm text-slate-400">
+                  Product Quantization — comprime vetores em códigos curtos;
+                  com IVF vira IVF-PQ (economiza muita RAM).
+                </div>
+              </div>
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+              >
+                <div class="font-semibold text-emerald-300">Recall</div>
+                <div class="mt-1 text-sm text-slate-400">
+                  Dos vizinhos certos, quantos realmente foram encontrados.
+                </div>
+              </div>
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+              >
+                <div class="font-semibold text-emerald-300">Índice</div>
+                <div class="mt-1 text-sm text-slate-400">
+                  Estrutura que organiza os embeddings para busca rápida
+                  (grafo, células…).
+                </div>
+              </div>
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+              >
+                <div class="font-semibold text-emerald-300">HNSW</div>
+                <div class="mt-1 text-sm text-slate-400">
+                  Hierarchical Navigable Small World — grafo em camadas com
+                  atalhos (avião → ônibus → a pé); padrão de mercado.
+                </div>
+              </div>
+              <div
+                class="rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+              >
+                <div class="font-semibold text-emerald-300">DiskANN</div>
+                <div class="mt-1 text-sm text-slate-400">
+                  ANN com grafo no SSD — para bilhões de vetores quando a RAM
+                  não basta.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Deep links -->
+          <div>
+            <h3 class="mb-4 text-lg font-semibold">Quer ir mais fundo?</h3>
+            <div class="grid gap-4 md:grid-cols-3">
+              <a
+                href="indices_e_vector_stores.html"
+                class="card-hover block rounded-2xl border border-slate-800 bg-gradient-to-br from-amber-950/40 to-slate-900/50 p-5"
+              >
+                <span class="pill pill-amber">Didático + referência</span>
+                <div class="mt-3 text-lg font-bold">
+                  Índices e Vector Stores
+                </div>
+                <p class="mt-2 text-sm text-slate-400">
+                  ANN, ChromaDB completo e Gemini Enterprise (File Search,
+                  Vector Search, RAG Engine).
+                </p>
+                <div class="mt-3 text-sm text-amber-300">Abrir jornada →</div>
+              </a>
+              <a
+                href="rag_agentic.html#embeddings"
+                class="card-hover block rounded-2xl border border-slate-800 bg-gradient-to-br from-blue-950/40 to-slate-900/50 p-5"
+              >
+                <span class="pill pill-accent">Avançado</span>
+                <div class="mt-3 text-lg font-bold">
+                  Embeddings além do cosseno
+                </div>
+                <p class="mt-2 text-sm text-slate-400">
+                  Bi-encoder, SPLADE, ColBERT, Matryoshka, quantização.
+                </p>
+                <div class="mt-3 text-sm text-blue-300">Abrir módulo →</div>
+              </a>
+              <a
+                href="rag_agentic.html#indices"
+                class="card-hover block rounded-2xl border border-slate-800 bg-gradient-to-br from-violet-950/40 to-slate-900/50 p-5"
+              >
+                <span class="pill" style="border-color:rgba(167,139,250,.4);color:#c4b5fd;background:rgba(167,139,250,.1)">Avançado</span>
+                <div class="mt-3 text-lg font-bold">
+                  Masterclass · Índices
+                </div>
+                <p class="mt-2 text-sm text-slate-400">
+                  Filtros, freshness e código de produção da Íris.
+                </p>
+                <div class="mt-3 text-sm text-violet-300">Abrir módulo →</div>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <footer class="border-t border-slate-800 pt-8 text-center text-xs text-slate-600">
+          Embeddings do Zero · complemento didático de
+          <a href="rag_agentic.html" class="text-slate-400 hover:text-blue-300"
+            >Neural Architect — RAG Agentic</a
+          >
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      /* ============================================================
+         NAV
+         ============================================================ */
+      const CHAPTERS = [
+        { id: "cap1", label: "1 · O problema" },
+        { id: "cap2", label: "2 · O mapa" },
+        { id: "cap3", label: "3 · Na mão" },
+        { id: "cap4", label: "4 · Cosseno" },
+        { id: "cap5", label: "5 · Buscador" },
+        { id: "cap6", label: "6 · Dimensões" },
+        { id: "cap7", label: "7 · Ponte → índices" },
+        { id: "cap9", label: "8 · Recap + quiz" },
+      ];
+
+      const nav = document.getElementById("chapterNav");
+      CHAPTERS.forEach((c) => {
+        const a = document.createElement("a");
+        a.href = "#" + c.id;
+        a.className =
+          "nav-link rounded-lg border border-transparent px-3 py-2 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60";
+        a.textContent = c.label;
+        a.dataset.cap = c.id;
+        nav.appendChild(a);
+      });
+
+      const menuToggle = document.getElementById("menuToggle");
+      const sidebar = document.getElementById("sidebar");
+      const overlay = document.getElementById("sidebarOverlay");
+      menuToggle.addEventListener("click", () => {
+        sidebar.classList.toggle("-translate-x-full");
+        overlay.classList.toggle("hidden");
+      });
+      overlay.addEventListener("click", () => {
+        sidebar.classList.add("-translate-x-full");
+        overlay.classList.add("hidden");
+      });
+      nav.querySelectorAll("a").forEach((a) =>
+        a.addEventListener("click", () => {
+          if (window.innerWidth < 1024) {
+            sidebar.classList.add("-translate-x-full");
+            overlay.classList.add("hidden");
+          }
+        }),
+      );
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              nav.querySelectorAll("a").forEach((a) =>
+                a.classList.toggle("active", a.dataset.cap === e.target.id),
+              );
+            }
+          });
+        },
+        { rootMargin: "-30% 0px -55% 0px", threshold: 0 },
+      );
+      CHAPTERS.forEach((c) => {
+        const el = document.getElementById(c.id);
+        if (el) observer.observe(el);
+      });
+
+      /* ============================================================
+         UTILS
+         ============================================================ */
+      function dist(a, b) {
+        let s = 0;
+        for (let i = 0; i < a.length; i++) s += (a[i] - b[i]) ** 2;
+        return Math.sqrt(s);
+      }
+      function dot(a, b) {
+        let s = 0;
+        for (let i = 0; i < a.length; i++) s += a[i] * b[i];
+        return s;
+      }
+      function norm(a) {
+        return Math.sqrt(dot(a, a)) || 1e-9;
+      }
+      function cosine(a, b) {
+        return dot(a, b) / (norm(a) * norm(b));
+      }
+      function resizeCanvas(canvas) {
+        const parent = canvas.parentElement;
+        const w = parent.clientWidth;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const cssH = parseInt(canvas.getAttribute("height"), 10) || 400;
+        canvas.style.width = w + "px";
+        canvas.style.height = cssH + "px";
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(cssH * dpr);
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        return { w, h: cssH, ctx };
+      }
+
+      /* ============================================================
+         CAP 1 — Literal search
+         ============================================================ */
+      const LITERAL_SRC =
+        "Meu cachorro late para o carteiro toda manhã. O animal é dócil com as crianças, mas late mesmo. Ontem ele viu um gato no quintal e correu atrás. Eu amo esse pet — ele é minha família de quatro patas.";
+
+      function runLiteralSearch() {
+        const q = document.getElementById("literalQuery").value.trim();
+        const box = document.getElementById("literalText");
+        const res = document.getElementById("literalResult");
+        if (!q) {
+          box.innerHTML = LITERAL_SRC;
+          res.innerHTML =
+            '<span class="text-slate-500">Digite algo para buscar.</span>';
+          return;
+        }
+        const re = new RegExp(
+          q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+          "gi",
+        );
+        let count = 0;
+        const html = LITERAL_SRC.replace(re, (m) => {
+          count++;
+          return `<span class="highlight-hit">${m}</span>`;
+        });
+        box.innerHTML = html;
+        if (count > 0) {
+          res.innerHTML = `<span class="text-emerald-300 font-semibold">${count} ocorrência(s)</span> de “${q}”. O computador só acha a sequência exata de letras.`;
+        } else {
+          const synonyms = {
+            cão: "cachorro / animal / pet",
+            cao: "cachorro / animal / pet",
+            dog: "cachorro / pet",
+            helicóptero: "nada relacionado — e isso está certo",
+            helicoptero: "nada relacionado — e isso está certo",
+          };
+          const hint = synonyms[q.toLowerCase()];
+          res.innerHTML = `<span class="text-rose-300 font-semibold">0 ocorrências</span> de “${q}”. ${
+            hint
+              ? `Humanos associariam a: <b class="text-amber-200">${hint}</b>. O computador, não.`
+              : "Para o computador, se as letras não batem, não existe."
+          }`;
+        }
+      }
+      document
+        .getElementById("literalSearchBtn")
+        .addEventListener("click", runLiteralSearch);
+      document
+        .getElementById("literalQuery")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter") runLiteralSearch();
+        });
+      document.querySelectorAll(".literal-chip").forEach((btn) =>
+        btn.addEventListener("click", () => {
+          document.getElementById("literalQuery").value = btn.dataset.q;
+          runLiteralSearch();
+        }),
+      );
+      runLiteralSearch();
+
+      /* ============================================================
+         CAP 2 — Word map
+         ============================================================ */
+      const WORD_NEIGHBORHOODS = [
+        {
+          name: "Animais",
+          color: "#34d399",
+          words: [
+            { t: "cachorro", x: 0.18, y: 0.28 },
+            { t: "gato", x: 0.28, y: 0.22 },
+            { t: "leão", x: 0.22, y: 0.42 },
+            { t: "pássaro", x: 0.35, y: 0.35 },
+            { t: "peixe", x: 0.12, y: 0.4 },
+          ],
+        },
+        {
+          name: "Comidas",
+          color: "#f59e0b",
+          words: [
+            { t: "pizza", x: 0.72, y: 0.25 },
+            { t: "hambúrguer", x: 0.82, y: 0.32 },
+            { t: "morango", x: 0.68, y: 0.4 },
+            { t: "arroz", x: 0.78, y: 0.18 },
+            { t: "sorvete", x: 0.88, y: 0.22 },
+          ],
+        },
+        {
+          name: "Veículos",
+          color: "#60a5fa",
+          words: [
+            { t: "carro", x: 0.2, y: 0.72 },
+            { t: "ônibus", x: 0.32, y: 0.78 },
+            { t: "avião", x: 0.15, y: 0.85 },
+            { t: "trator", x: 0.38, y: 0.68 },
+            { t: "bicicleta", x: 0.28, y: 0.62 },
+          ],
+        },
+        {
+          name: "Sentimentos",
+          color: "#f472b6",
+          words: [
+            { t: "feliz", x: 0.7, y: 0.7 },
+            { t: "triste", x: 0.82, y: 0.78 },
+            { t: "raiva", x: 0.75, y: 0.88 },
+            { t: "amor", x: 0.88, y: 0.68 },
+            { t: "medo", x: 0.65, y: 0.82 },
+          ],
+        },
+      ];
+
+      let selectedWord = null;
+
+      function allWords() {
+        const out = [];
+        WORD_NEIGHBORHOODS.forEach((n) =>
+          n.words.forEach((w) => out.push({ ...w, color: n.color, hood: n.name })),
+        );
+        return out;
+      }
+
+      function drawWordMap() {
+        const canvas = document.getElementById("wordMap");
+        const { w, h, ctx } = resizeCanvas(canvas);
+        ctx.clearRect(0, 0, w, h);
+
+        // neighborhood soft blobs
+        WORD_NEIGHBORHOODS.forEach((n) => {
+          const cx =
+            (n.words.reduce((s, x) => s + x.x, 0) / n.words.length) * w;
+          const cy =
+            (n.words.reduce((s, x) => s + x.y, 0) / n.words.length) * h;
+          const g = ctx.createRadialGradient(cx, cy, 10, cx, cy, 90);
+          g.addColorStop(0, n.color + "33");
+          g.addColorStop(1, "transparent");
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(cx, cy, 90, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        const words = allWords();
+
+        if (selectedWord) {
+          const sel = words.find((x) => x.t === selectedWord);
+          if (sel) {
+            const ranked = words
+              .filter((x) => x.t !== sel.t)
+              .map((x) => ({
+                ...x,
+                d: dist([x.x, x.y], [sel.x, sel.y]),
+              }))
+              .sort((a, b) => a.d - b.d)
+              .slice(0, 3);
+
+            ranked.forEach((nb) => {
+              ctx.strokeStyle = "#fbbf2466";
+              ctx.lineWidth = 1.5;
+              ctx.setLineDash([4, 4]);
+              ctx.beginPath();
+              ctx.moveTo(sel.x * w, sel.y * h);
+              ctx.lineTo(nb.x * w, nb.y * h);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            });
+
+            const info = document.getElementById("wordMapInfo");
+            info.innerHTML = `<b class="text-white">${sel.t}</b> mora no bairro <b style="color:${sel.color}">${sel.hood}</b>. Vizinhos mais próximos:
+              ${ranked
+                .map(
+                  (n) =>
+                    `<span class="inline-flex items-center gap-1 ml-1"><span class="font-mono text-amber-300">${n.t}</span><span class="text-slate-500">(d=${n.d.toFixed(2)})</span></span>`,
+                )
+                .join("")}`;
+          }
+        }
+
+        words.forEach((word) => {
+          const px = word.x * w;
+          const py = word.y * h;
+          const active = word.t === selectedWord;
+          ctx.beginPath();
+          ctx.arc(px, py, active ? 8 : 5, 0, Math.PI * 2);
+          ctx.fillStyle = word.color;
+          ctx.fill();
+          if (active) {
+            ctx.strokeStyle = "#fbbf24";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+          ctx.fillStyle = "#e2e8f0";
+          ctx.font = "12px Inter, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(word.t, px, py - 12);
+        });
+      }
+
+      function setupWordMapLegend() {
+        const el = document.getElementById("wordMapLegend");
+        el.innerHTML = WORD_NEIGHBORHOODS.map(
+          (n) =>
+            `<span class="inline-flex items-center gap-1.5 rounded-full border border-slate-700 px-2 py-0.5"><span class="h-2 w-2 rounded-full" style="background:${n.color}"></span>${n.name}</span>`,
+        ).join("");
+      }
+
+      document.getElementById("wordMap").addEventListener("click", (e) => {
+        const canvas = e.target;
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top) / rect.height;
+        const words = allWords();
+        let best = null;
+        let bestD = 0.05;
+        words.forEach((w) => {
+          const d = dist([w.x, w.y], [x, y]);
+          if (d < bestD) {
+            bestD = d;
+            best = w;
+          }
+        });
+        if (best) {
+          selectedWord = best.t;
+          drawWordMap();
+        }
+      });
+      setupWordMapLegend();
+      drawWordMap();
+      window.addEventListener("resize", () => {
+        drawWordMap();
+        drawHandEmbed();
+        drawCosine();
+      });
+
+      /* ============================================================
+         CAP 3 — Hand-built embedding
+         ============================================================ */
+      const REFERENCE_THINGS = [
+        { name: "leão", v: [9, 8, 1, 9], color: "#34d399" },
+        { name: "morango", v: [1, 1, 10, 0], color: "#f59e0b" },
+        { name: "trator", v: [0, 9, 0, 4], color: "#60a5fa" },
+        { name: "gatinho", v: [10, 2, 0, 1], color: "#f472b6" },
+        { name: "pizza", v: [0, 3, 10, 0], color: "#fb7185" },
+        { name: "tank", v: [0, 10, 0, 10], color: "#a78bfa" },
+      ];
+
+      const PRESETS = {
+        leão: [9, 8, 1, 9],
+        morango: [1, 1, 10, 0],
+        trator: [0, 9, 0, 4],
+      };
+
+      let currentThing = "leão";
+
+      function getHandDims() {
+        return [
+          +document.getElementById("dimVivo").value,
+          +document.getElementById("dimGrande").value,
+          +document.getElementById("dimComer").value,
+          +document.getElementById("dimPerigo").value,
+        ];
+      }
+
+      function updateDimLabels() {
+        const d = getHandDims();
+        document.getElementById("dimVivoVal").textContent = d[0];
+        document.getElementById("dimGrandeVal").textContent = d[1];
+        document.getElementById("dimComerVal").textContent = d[2];
+        document.getElementById("dimPerigoVal").textContent = d[3];
+      }
+
+      function drawHandEmbed() {
+        updateDimLabels();
+        const canvas = document.getElementById("handEmbedCanvas");
+        const { w, h, ctx } = resizeCanvas(canvas);
+        ctx.clearRect(0, 0, w, h);
+
+        // axes: vivo (x) vs perigo (y) — projection of 4D
+        ctx.strokeStyle = "#1e293b";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(40, h - 30);
+        ctx.lineTo(w - 20, h - 30);
+        ctx.moveTo(40, h - 30);
+        ctx.lineTo(40, 20);
+        ctx.stroke();
+        ctx.fillStyle = "#64748b";
+        ctx.font = "10px Inter";
+        ctx.fillText("é vivo →", w - 70, h - 12);
+        ctx.save();
+        ctx.translate(14, 80);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText("é perigoso →", 0, 0);
+        ctx.restore();
+
+        const toXY = (v) => ({
+          x: 40 + (v[0] / 10) * (w - 70),
+          y: h - 30 - (v[3] / 10) * (h - 60),
+        });
+
+        REFERENCE_THINGS.forEach((t) => {
+          const p = toXY(t.v);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+          ctx.fillStyle = t.color + "88";
+          ctx.fill();
+          ctx.fillStyle = "#94a3b8";
+          ctx.font = "10px Inter";
+          ctx.textAlign = "center";
+          ctx.fillText(t.name, p.x, p.y - 10);
+        });
+
+        const dims = getHandDims();
+        const me = toXY(dims);
+        ctx.beginPath();
+        ctx.arc(me.x, me.y, 9, 0, Math.PI * 2);
+        ctx.fillStyle = "#fbbf24";
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        const name =
+          currentThing === "custom"
+            ? document.getElementById("customName").value || "sua coisa"
+            : currentThing;
+
+        document.getElementById("handEmbedVector").textContent =
+          `${name} → [${dims.join(", ")}]   // [vivo, grande, comestível, perigoso]`;
+
+        const ranked = REFERENCE_THINGS.filter(
+          (t) => t.name !== currentThing,
+        )
+          .map((t) => ({ ...t, d: dist(dims, t.v) }))
+          .sort((a, b) => a.d - b.d)
+          .slice(0, 2);
+
+        document.getElementById("handEmbedNearest").innerHTML =
+          `Vizinhos no espaço 4D: ${ranked
+            .map(
+              (t) =>
+                `<b style="color:${t.color}">${t.name}</b> <span class="font-mono text-slate-500">(d=${t.d.toFixed(1)})</span>`,
+            )
+            .join(" · ")}`;
+      }
+
+      ["dimVivo", "dimGrande", "dimComer", "dimPerigo"].forEach((id) =>
+        document.getElementById(id).addEventListener("input", drawHandEmbed),
+      );
+      document.getElementById("customName").addEventListener("input", drawHandEmbed);
+
+      document.querySelectorAll(".thing-btn").forEach((btn) =>
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".thing-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentThing = btn.dataset.thing;
+          document
+            .getElementById("customNameWrap")
+            .classList.toggle("hidden", currentThing !== "custom");
+          if (PRESETS[currentThing]) {
+            const p = PRESETS[currentThing];
+            document.getElementById("dimVivo").value = p[0];
+            document.getElementById("dimGrande").value = p[1];
+            document.getElementById("dimComer").value = p[2];
+            document.getElementById("dimPerigo").value = p[3];
+          }
+          drawHandEmbed();
+        }),
+      );
+      drawHandEmbed();
+
+      /* ============================================================
+         CAP 4 — Cosine demo
+         ============================================================ */
+      const cosState = {
+        a: { x: 0.7, y: -0.3 },
+        b: { x: 0.5, y: -0.6 },
+        drag: null,
+      };
+
+      function drawCosine() {
+        const canvas = document.getElementById("cosineCanvas");
+        const { w, h, ctx } = resizeCanvas(canvas);
+        ctx.clearRect(0, 0, w, h);
+        const cx = w / 2;
+        const cy = h / 2;
+        const scale = Math.min(w, h) * 0.35;
+
+        // axes
+        ctx.strokeStyle = "#1e293b";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(20, cy);
+        ctx.lineTo(w - 20, cy);
+        ctx.moveTo(cx, 20);
+        ctx.lineTo(cx, h - 20);
+        ctx.stroke();
+
+        // unit circle
+        ctx.strokeStyle = "#1e293b";
+        ctx.beginPath();
+        ctx.arc(cx, cy, scale, 0, Math.PI * 2);
+        ctx.stroke();
+
+        const drawArrow = (v, color, label) => {
+          const ex = cx + v.x * scale;
+          const ey = cy + v.y * scale;
+          ctx.strokeStyle = color;
+          ctx.fillStyle = color;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(ex, ey);
+          ctx.stroke();
+          // head
+          const ang = Math.atan2(v.y, v.x);
+          ctx.beginPath();
+          ctx.moveTo(ex, ey);
+          ctx.lineTo(
+            ex - 12 * Math.cos(ang - 0.4),
+            ey - 12 * Math.sin(ang - 0.4),
+          );
+          ctx.lineTo(
+            ex - 12 * Math.cos(ang + 0.4),
+            ey - 12 * Math.sin(ang + 0.4),
+          );
+          ctx.closePath();
+          ctx.fill();
+          // handle
+          ctx.beginPath();
+          ctx.arc(ex, ey, 10, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.fillStyle = "#e2e8f0";
+          ctx.font = "12px Inter";
+          ctx.fillText(label, ex + 14, ey - 8);
+          return { ex, ey };
+        };
+
+        drawArrow(cosState.a, "#3b82f6", "vetor A");
+        drawArrow(cosState.b, "#34d399", "vetor B");
+
+        // angle arc
+        const angA = Math.atan2(cosState.a.y, cosState.a.x);
+        const angB = Math.atan2(cosState.b.y, cosState.b.x);
+        let delta = angB - angA;
+        while (delta > Math.PI) delta -= 2 * Math.PI;
+        while (delta < -Math.PI) delta += 2 * Math.PI;
+
+        ctx.strokeStyle = "#fbbf2488";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, scale * 0.35, angA, angA + delta, delta < 0);
+        ctx.stroke();
+
+        const va = [cosState.a.x, cosState.a.y];
+        const vb = [cosState.b.x, cosState.b.y];
+        const c = cosine(va, vb);
+        const deg = (Math.acos(Math.max(-1, Math.min(1, c))) * 180) / Math.PI;
+
+        document.getElementById("cosAngle").textContent = deg.toFixed(0) + "°";
+        document.getElementById("cosValue").textContent = c.toFixed(3);
+
+        const verdict = document.getElementById("cosVerdict");
+        if (c > 0.85) {
+          verdict.textContent = "Quase iguais";
+          verdict.className =
+            "mt-1 text-lg font-semibold text-emerald-300";
+        } else if (c > 0.35) {
+          verdict.textContent = "Parecidos";
+          verdict.className = "mt-1 text-lg font-semibold text-blue-300";
+        } else if (c > -0.2) {
+          verdict.textContent = "Neutros";
+          verdict.className = "mt-1 text-lg font-semibold text-slate-300";
+        } else {
+          verdict.textContent = "Opostos";
+          verdict.className = "mt-1 text-lg font-semibold text-rose-300";
+        }
+
+        const da = dot(va, vb).toFixed(3);
+        const na = norm(va).toFixed(3);
+        const nb = norm(vb).toFixed(3);
+        document.getElementById("cosMath").innerHTML = `
+          <span class="text-slate-500">Fórmula:</span> cos(θ) = (A · B) / (|A| × |B|)<br/><br/>
+          A = (${va[0].toFixed(2)}, ${va[1].toFixed(2)}) &nbsp;&nbsp;
+          B = (${vb[0].toFixed(2)}, ${vb[1].toFixed(2)})<br/>
+          <span class="text-slate-500">1.</span> A·B = ${va[0].toFixed(2)}×${vb[0].toFixed(2)} + ${va[1].toFixed(2)}×${vb[1].toFixed(2)} = <span class="text-blue-300">${da}</span><br/>
+          <span class="text-slate-500">2.</span> |A| = √(${va[0].toFixed(2)}² + ${va[1].toFixed(2)}²) = <span class="text-emerald-300">${na}</span>
+          &nbsp;&nbsp; |B| = √(${vb[0].toFixed(2)}² + ${vb[1].toFixed(2)}²) = <span class="text-emerald-300">${nb}</span><br/>
+          <span class="text-slate-500">3.</span> cos(θ) = ${da} / (${na} × ${nb}) = <span class="text-amber-300">${c.toFixed(3)}</span>
+          &nbsp;→ ângulo ≈ <span class="text-blue-300">${deg.toFixed(0)}°</span>
+        `;
+      }
+
+      function cosPointer(e, canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const cx = rect.width / 2;
+        const cy = rect.height / 2;
+        const scale = Math.min(rect.width, rect.height) * 0.35;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const x = (clientX - rect.left - cx) / scale;
+        const y = (clientY - rect.top - cy) / scale;
+        return { x, y };
+      }
+
+      (function setupCosineDrag() {
+        const canvas = document.getElementById("cosineCanvas");
+        const hitTest = (p) => {
+          const da = dist([p.x, p.y], [cosState.a.x, cosState.a.y]);
+          const db = dist([p.x, p.y], [cosState.b.x, cosState.b.y]);
+          if (da < 0.25 && da <= db) return "a";
+          if (db < 0.25) return "b";
+          return null;
+        };
+        const onDown = (e) => {
+          const p = cosPointer(e, canvas);
+          cosState.drag = hitTest(p);
+          e.preventDefault();
+        };
+        const onMove = (e) => {
+          if (!cosState.drag) return;
+          const p = cosPointer(e, canvas);
+          const len = Math.hypot(p.x, p.y) || 1;
+          const clamped = Math.min(len, 1.15);
+          cosState[cosState.drag] = {
+            x: (p.x / len) * clamped,
+            y: (p.y / len) * clamped,
+          };
+          drawCosine();
+          e.preventDefault();
+        };
+        const onUp = () => {
+          cosState.drag = null;
+        };
+        canvas.addEventListener("mousedown", onDown);
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+        canvas.addEventListener("touchstart", onDown, { passive: false });
+        window.addEventListener("touchmove", onMove, { passive: false });
+        window.addEventListener("touchend", onUp);
+      })();
+      drawCosine();
+
+      /* ============================================================
+         CAP 5 — Mini semantic search
+         ============================================================ */
+      // Toy 5D embeddings: [crédito, seguro, animal, promo_code, blog_carro]
+      const FAQ = [
+        {
+          id: 1,
+          text: "Você pode cancelar o financiamento em até 7 dias úteis após a assinatura.",
+          v: [0.95, 0.1, 0.0, 0.0, 0.05],
+        },
+        {
+          id: 2,
+          text: "A carência do crédito pessoal é de 45 dias a partir da liberação.",
+          v: [0.9, 0.15, 0.0, 0.0, 0.0],
+        },
+        {
+          id: 3,
+          text: "O seguro prestamista cobre desemprego involuntário e invalidez.",
+          v: [0.45, 0.92, 0.0, 0.0, 0.05],
+        },
+        {
+          id: 4,
+          text: "5 dicas para economizar no seguro do seu carro (blog 2019).",
+          v: [0.05, 0.55, 0.0, 0.0, 0.95],
+        },
+        {
+          id: 5,
+          text: "Campanha PROMO-AUTO-2026: 0% de juros na primeira parcela do veículo.",
+          v: [0.5, 0.1, 0.0, 0.98, 0.3],
+        },
+        {
+          id: 6,
+          text: "Como quitar antecipadamente o saldo devedor do financiamento.",
+          v: [0.88, 0.05, 0.0, 0.0, 0.05],
+        },
+        {
+          id: 7,
+          text: "Meu cachorro late muito à noite — dicas de adestramento.",
+          v: [0.0, 0.0, 0.95, 0.0, 0.0],
+        },
+        {
+          id: 8,
+          text: "Política de pets no condomínio: animais de estimação são bem-vindos.",
+          v: [0.0, 0.0, 0.9, 0.0, 0.0],
+        },
+        {
+          id: 9,
+          text: "Renegociação de dívidas em atraso: regras e documentos necessários.",
+          v: [0.85, 0.1, 0.0, 0.0, 0.0],
+        },
+        {
+          id: 10,
+          text: "O que é a NI-CRED-094 (revogada) sobre renegociação de crédito.",
+          v: [0.8, 0.05, 0.0, 0.0, 0.0],
+        },
+        {
+          id: 11,
+          text: "Horário de atendimento da agência: segunda a sexta, 10h às 16h.",
+          v: [0.2, 0.05, 0.0, 0.0, 0.0],
+        },
+        {
+          id: 12,
+          text: "Como ativar o código PROMO-AUTO-2026 no aplicativo do banco.",
+          v: [0.35, 0.05, 0.0, 0.99, 0.15],
+        },
+      ];
+
+      function embedQuery(q) {
+        const s = q.toLowerCase();
+        // Hand-crafted toy encoder for demo
+        const v = [0.1, 0.1, 0.05, 0.0, 0.05];
+        if (/cancel|desist|desistir|financi|crédito|credito|quitar|carência|carencia|dívida|divida|renegoc|parcel/.test(s))
+          v[0] += 0.8;
+        if (/seguro|prestamista|cobertura|sinistro|desemprego/.test(s))
+          v[1] += 0.85;
+        if (/cão|cao|cachorro|gato|pet|animal|late|latir/.test(s))
+          v[2] += 0.9;
+        if (/promo-auto-2026|promo_auto|promo auto/.test(s)) v[3] += 1.0;
+        if (/carro|veículo|veiculo|auto|barato/.test(s) && /seguro|econom/.test(s))
+          v[4] += 0.7;
+        if (/carro|veículo|veiculo/.test(s)) v[4] += 0.25;
+        return v;
+      }
+
+      function lexicalScore(q, text) {
+        const tokens = q
+          .toLowerCase()
+          .split(/[^a-zà-ú0-9-]+/i)
+          .filter((t) => t.length > 2);
+        if (!tokens.length) return 0;
+        const t = text.toLowerCase();
+        let hits = 0;
+        tokens.forEach((tok) => {
+          if (t.includes(tok)) hits++;
+        });
+        return hits / tokens.length;
+      }
+
+      function runFaqSearch() {
+        const q = document.getElementById("faqQuery").value.trim();
+        const qv = embedQuery(q);
+
+        const lex = FAQ.map((doc) => ({
+          ...doc,
+          score: lexicalScore(q, doc.text),
+        }))
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 4);
+
+        const sem = FAQ.map((doc) => ({
+          ...doc,
+          score: cosine(qv, doc.v),
+        }))
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 4);
+
+        const render = (list, el, kind) => {
+          el.innerHTML = list
+            .map((d, i) => {
+              const pct = kind === "lex" ? d.score : (d.score + 1) / 2;
+              const bar =
+                kind === "lex"
+                  ? Math.round(d.score * 100)
+                  : Math.round(Math.max(0, d.score) * 100);
+              const muted = d.score < 0.01 && kind === "lex";
+              return `<div class="rounded-lg border border-slate-800 px-3 py-2 ${muted ? "opacity-40" : ""}">
+                <div class="flex items-center justify-between gap-2 mb-1">
+                  <span class="text-[10px] text-slate-500">#${i + 1}</span>
+                  <span class="font-mono text-[11px] ${kind === "lex" ? "text-rose-300" : "text-emerald-300"}">${
+                    kind === "lex"
+                      ? (d.score * 100).toFixed(0) + "% tokens"
+                      : "cos " + d.score.toFixed(2)
+                  }</span>
+                </div>
+                <div class="text-slate-300 text-xs leading-relaxed">${d.text}</div>
+                <div class="mt-1.5 h-1 rounded-full bg-slate-800 overflow-hidden">
+                  <div class="h-full rounded-full ${kind === "lex" ? "bg-rose-400" : "bg-emerald-400"}" style="width:${bar}%"></div>
+                </div>
+              </div>`;
+            })
+            .join("");
+        };
+
+        render(lex, document.getElementById("faqLexical"), "lex");
+        render(sem, document.getElementById("faqSemantic"), "sem");
+
+        const lesson = document.getElementById("faqLesson");
+        const ql = q.toLowerCase();
+        if (/cão|cao|cachorro|pet|late/.test(ql)) {
+          lesson.innerHTML =
+            "<b>Sinônimo vence no embedding.</b> “Pet” e “cachorro” não compartilham letras, mas moram no mesmo bairro do mapa. O léxico zera; o semântico acerta.";
+        } else if (/promo-auto-2026|promo/.test(ql)) {
+          lesson.innerHTML =
+            "<b>Código exato vence no léxico.</b> “PROMO-AUTO-2026” não tem semântica — tem identidade. Embeddings são cegos a IDs raros. Por isso RAG moderno é <b>híbrido</b> (denso + esparso).";
+        } else if (/seguro.*carro|carro.*seguro|barato/.test(ql)) {
+          lesson.innerHTML =
+            "<b>Similaridade ≠ relevância.</b> O blog de 2019 “parece” a pergunta (seguro + carro), mas não responde. É a armadilha que justifica o reranker.";
+        } else if (/cancel|financi/.test(ql)) {
+          lesson.innerHTML =
+            "<b>Intenção &gt; palavras.</b> “Cancelar o financiamento” encontra a política certa mesmo sem as palavras exatas do documento. É o poder do endereço semântico.";
+        } else {
+          lesson.innerHTML =
+            "Compare os dois lados. Onde o léxico falha em sinônimos, o embedding brilha. Onde há um código raro, o léxico brilha. Na prática: use os dois.";
+        }
+      }
+
+      document
+        .getElementById("faqSearchBtn")
+        .addEventListener("click", runFaqSearch);
+      document.getElementById("faqQuery").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") runFaqSearch();
+      });
+      document.querySelectorAll(".faq-chip").forEach((btn) =>
+        btn.addEventListener("click", () => {
+          document.getElementById("faqQuery").value = btn.dataset.q;
+          runFaqSearch();
+        }),
+      );
+      runFaqSearch();
+
+      /* ============================================================
+         CAP 6 — Plotly 3D
+         ============================================================ */
+      function drawPlot3d() {
+        const cluster = (name, color, pts) => ({
+          x: pts.map((p) => p[0]),
+          y: pts.map((p) => p[1]),
+          z: pts.map((p) => p[2]),
+          text: pts.map((p) => p[3]),
+          name,
+          mode: "markers+text",
+          type: "scatter3d",
+          textposition: "top center",
+          textfont: { size: 10, color: "#e2e8f0" },
+          marker: { size: 6, color, opacity: 0.9 },
+        });
+        const cobranca = cluster("Cobrança", "#f43f5e", [
+          [1.0, 1.0, 1.0, "atraso"],
+          [1.3, 0.8, 1.2, "inadimplência"],
+          [0.8, 1.3, 0.9, "acordo"],
+        ]);
+        const quitacao = cluster("Quitação", "#34d399", [
+          [4.0, 3.8, 1.1, "quitação"],
+          [4.3, 4.1, 1.3, "amortização"],
+          [3.8, 4.3, 0.9, "saldo"],
+        ]);
+        const seguro = cluster("Seguros", "#3b82f6", [
+          [2.4, 2.6, 4.9, "prestamista"],
+          [2.7, 2.4, 5.2, "desemprego"],
+          [2.2, 2.9, 5.4, "sinistro"],
+        ]);
+        const armadilha = cluster("Armadilha", "#f59e0b", [
+          [3.9, 1.2, 4.6, "blog seguro carro"],
+        ]);
+        const query = {
+          x: [3.1],
+          y: [3.2],
+          z: [3.0],
+          text: ["SUA PERGUNTA"],
+          name: "Query",
+          mode: "markers+text",
+          type: "scatter3d",
+          textposition: "bottom center",
+          textfont: { size: 12, color: "#fde68a" },
+          marker: { size: 12, color: "#fbbf24", symbol: "diamond" },
+        };
+        Plotly.newPlot(
+          "plot3d",
+          [cobranca, quitacao, seguro, armadilha, query],
+          {
+            paper_bgcolor: "rgba(0,0,0,0)",
+            plot_bgcolor: "rgba(0,0,0,0)",
+            font: { color: "#94a3b8", family: "Inter", size: 11 },
+            margin: { l: 0, r: 0, b: 0, t: 0 },
+            showlegend: true,
+            legend: { orientation: "h", y: -0.02, font: { size: 10 } },
+            scene: {
+              xaxis: {
+                title: "",
+                color: "#475569",
+                gridcolor: "#1e293b",
+                showticklabels: false,
+              },
+              yaxis: {
+                title: "",
+                color: "#475569",
+                gridcolor: "#1e293b",
+                showticklabels: false,
+              },
+              zaxis: {
+                title: "",
+                color: "#475569",
+                gridcolor: "#1e293b",
+                showticklabels: false,
+              },
+            },
+          },
+          { responsive: true, displayModeBar: false },
+        );
+      }
+      drawPlot3d();
+
+      /* CAP 7/8 ANN+Chart migrados para indices_e_vector_stores.html */
+
+      /* ============================================================
+         CAP 9 — Quiz
+         ============================================================ */
+      const QUIZ = [
+        {
+          q: "O que é um embedding?",
+          options: [
+            "Um arquivo PDF comprimido",
+            "Um endereço numérico que captura o significado de um texto",
+            "Um tipo de banco de dados SQL",
+            "Uma senha criptografada",
+          ],
+          answer: 1,
+          why: "Embedding = lista de números (vetor) que posiciona o texto num mapa de significados.",
+        },
+        {
+          q: "Por que “cão” e “cachorro” ficam perto no mapa?",
+          options: [
+            "Porque têm quase as mesmas letras",
+            "Porque um humano programou essa regra à mão",
+            "Porque o modelo aprendeu que aparecem em contextos parecidos",
+            "Porque começam com a mesma letra",
+          ],
+          answer: 2,
+          why: "Modelos aprendem com bilhões de textos: palavras que aparecem juntas tendem a morar perto.",
+        },
+        {
+          q: "Cosseno próximo de 1 significa…",
+          options: [
+            "Os vetores apontam para a mesma direção (parecidos)",
+            "Os vetores são opostos",
+            "Houve um erro de cálculo",
+            "O texto é muito longo",
+          ],
+          answer: 0,
+          why: "cos ≈ 1 → ângulo pequeno → mesma direção → textos semanticamente próximos.",
+        },
+        {
+          q: "Por que usamos busca aproximada (ANN) em vez de comparar com todos?",
+          options: [
+            "Porque é mais precisa que a busca exata",
+            "Porque comparar com milhões de vetores seria lento demais",
+            "Porque embeddings não funcionam com busca exata",
+            "Porque a lei exige",
+          ],
+          answer: 1,
+          why: "Busca exata é O(N·d). Com milhões de vetores, ANN entrega ~95–99% dos vizinhos certos em milissegundos.",
+        },
+        {
+          q: "O que o recall mede?",
+          options: [
+            "Quantos megabytes o índice ocupa",
+            "A velocidade da consulta em milissegundos",
+            "Dos vizinhos certos, quantos realmente foram encontrados",
+            "O número de dimensões do embedding",
+          ],
+          answer: 2,
+          why: "Recall = cobertura. Se o ANN perde o vizinho certo, nenhuma etapa posterior recupera.",
+        },
+      ];
+
+      let quizCorrect = 0;
+      const quizBox = document.getElementById("quizBox");
+      const answered = new Set();
+
+      QUIZ.forEach((item, qi) => {
+        const wrap = document.createElement("div");
+        wrap.className = "space-y-2";
+        wrap.innerHTML = `<div class="text-sm font-medium text-slate-200">${qi + 1}. ${item.q}</div>`;
+        const opts = document.createElement("div");
+        opts.className = "grid gap-2";
+        item.options.forEach((opt, oi) => {
+          const btn = document.createElement("button");
+          btn.className =
+            "quiz-btn rounded-lg border border-slate-700 bg-slate-950/40 px-3 py-2 text-left text-sm text-slate-300 hover:border-slate-500";
+          btn.textContent = opt;
+          btn.addEventListener("click", () => {
+            if (answered.has(qi)) return;
+            answered.add(qi);
+            const buttons = opts.querySelectorAll("button");
+            buttons.forEach((b, i) => {
+              if (i === item.answer) b.classList.add("correct");
+              if (i === oi && oi !== item.answer) b.classList.add("wrong");
+              b.disabled = true;
+            });
+            if (oi === item.answer) quizCorrect++;
+            document.getElementById("quizScore").textContent =
+              `${quizCorrect} / ${QUIZ.length}`;
+            const why = document.createElement("div");
+            why.className =
+              "text-xs text-slate-500 mt-1 " +
+              (oi === item.answer ? "text-emerald-400/80" : "text-rose-300/80");
+            why.textContent =
+              (oi === item.answer ? "✓ " : "✗ ") + item.why;
+            wrap.appendChild(why);
+          });
+          opts.appendChild(btn);
+        });
+        wrap.appendChild(opts);
+        quizBox.appendChild(wrap);
+      });
+    </script>
+  </body>
+</html>
